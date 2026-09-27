@@ -36,6 +36,14 @@ than reviving the old grants; a grant in `instance:a` authorizes nothing in
 `"deleted": true` in the create body is ignored; a withdrawn grant stops on
 the next check.
 
+`routes/deleted_role_security_test.go` (2026-09-27, eleventh sweep) pins two
+more: `PUT /roles/{code}/actions` refuses a wildcard (`catalog.*`, `*`), a
+miscased or a padded action with 400 and stores none of the list; and a
+deleted role stays inert — a `PATCH` claiming `"deleted": false` does not
+revive it, and an action added to it or a grant made on it afterwards (both
+still answered 201, a correctness wrinkle rather than a path to authority)
+authorizes nothing and lists nothing.
+
 ## Red by design
 
 `routes/grant_security_test.go`'s
