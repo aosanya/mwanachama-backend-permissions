@@ -12,16 +12,6 @@ import (
 	permissions "github.com/aosanya/mwanachama-backend-permissions"
 )
 
-// domainWords are words that mean something in one domain and nothing in
-// another. This module is expected to hold a hospital's clinical privileges
-// as readily as a studio's operator roles, so none of them may appear in an
-// identifier, a stored value or the blueprint.
-//
-// They are allowed in comments, where they earn their place by illustrating
-// what a neutral name stands for. Note what is deliberately absent: "role",
-// "grant", "action" and "scope" are this module's own vocabulary, general
-// enough to mean the same thing everywhere, which is the test the rule
-// actually applies.
 var domainWords = []string{
 	"agency", "agencies", "studio", "operator", "catalog", "archetype",
 	"ward", "clinical", "practitioner", "patient", "nurse",
@@ -100,8 +90,6 @@ func TestNoDomainWordsInTheBlueprint(t *testing.T) {
 	}
 }
 
-// The module claims to be domain-agnostic; two domains that disagree about
-// every noun are how that claim is tested rather than asserted.
 func TestBothExampleDomainsLoadThroughTheBlueprint(t *testing.T) {
 	for _, tc := range []struct {
 		path  string

@@ -42,10 +42,6 @@ func (m *manager) CreateGrant(ctx context.Context, g models.Grant) (models.Grant
 	return g, nil
 }
 
-// reinstate turns a withdrawn grant back on rather than inserting a second
-// row, because the three keys are the whole primary key. The trail is what
-// granted_at and granted_by say now, not a row per decision — a fuller audit
-// belongs in whatever records the act, not in the table the gate reads.
 func (m *manager) reinstate(ctx context.Context, g models.Grant) (models.Grant, error) {
 	g.GrantedAt, g.Deleted = models.NowRFC3339(), false
 	err := m.query(ctx, roleGrant).

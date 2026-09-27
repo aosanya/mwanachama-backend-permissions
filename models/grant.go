@@ -9,6 +9,4 @@ type Grant struct {
 	Deleted   bool   `json:"deleted"`
 }
 
-// ScopeEverywhere is the one scope this module reads rather than compares:
-// a grant made here applies in every scope.
 const ScopeEverywhere = "*"

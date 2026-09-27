@@ -107,9 +107,6 @@ func (m *manager) UpdateRole(ctx context.Context, r models.Role) (models.Role, e
 	return existing, nil
 }
 
-// DeleteRole retires a bundle. The grants naming it are left standing: a
-// withdrawn permission and a forgotten one look the same afterwards, and only
-// one of them can be explained.
 func (m *manager) DeleteRole(ctx context.Context, code string) error {
 	if _, err := m.findRole(ctx, code); err != nil {
 		return err

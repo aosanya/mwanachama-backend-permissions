@@ -68,11 +68,6 @@ func (m *manager) query(ctx context.Context, role string) *gorm.DB {
 	return m.store.Query(ctx, role)
 }
 
-// MayPerform is the question the whole module exists to answer. A subject may
-// perform an action in a scope when some live grant of theirs, made either
-// here or everywhere, names a live role that lists that action.
-//
-// It is one query because it is asked on every gated call.
 func (m *manager) MayPerform(ctx context.Context, subject, scope, action string) (bool, error) {
 	if subject == "" || scope == "" {
 		return false, nil
@@ -104,10 +99,6 @@ func (m *manager) MayPerform(ctx context.Context, subject, scope, action string)
 	return n > 0, nil
 }
 
-// ActionsFor is every action a subject may perform in a scope. It answers the
-// listing question — which tools to offer — where MayPerform answers the
-// gate. The gate is the enforcement; this is a convenience, and the two must
-// never be swapped.
 func (m *manager) ActionsFor(ctx context.Context, subject, scope string) ([]string, error) {
 	if subject == "" || scope == "" {
 		return nil, nil

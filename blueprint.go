@@ -31,3 +31,8 @@ func ParseSpec(raw []byte) (*spec.Spec, error) {
 	}
 	return b.Parse(raw)
 }
+
+//go:embed permissions.operations.json
+var operationsJSON []byte
+
+func Operations() []byte { return operationsJSON }

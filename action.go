@@ -91,10 +91,6 @@ func (m *manager) ListActions(ctx context.Context, roleCode string) ([]models.Ro
 	return out, nil
 }
 
-// SetActions replaces a bundle's whole list in one transaction. It is how a
-// seeding pass says "these are the actions the mounted modules declare now",
-// which is what makes listing every action one by one affordable: the list is
-// recomputed, never maintained by hand.
 func (m *manager) SetActions(ctx context.Context, roleCode string, actions []string) ([]models.RoleAction, error) {
 	if _, err := m.findRole(ctx, roleCode); err != nil {
 		return nil, err
