@@ -79,3 +79,13 @@ module that owns the rows, the way catalog's `visibility` already works.
 It does not decide who may grant. Granting is itself an action
 (`permissions.grant.create`), so the module gates itself, and what seeds the
 very first grant is a bootstrap problem for whoever mounts it.
+
+**The gate covers the action, not where it is exercised, nor who is recorded.**
+`dispatch`'s authorizer sees only `(ctx, action)`, and `CreateGrant` checks
+neither the grant's `scope` against the granter's own grants nor `granted_by`
+against the caller. The 2026-09-27 security sweep showed both through this
+module's own route table: a subject holding `permissions.grant.create` only in
+`instance:a` granted itself an admin role in `*` (PM5), and a body's
+`granted_by` is stored as sent (PM6). Until those rows close, "the module
+gates itself" means *may grant somewhere*, and the trail is whatever the
+caller wrote. `create_role` likewise keeps a body's `seeded` (PM7).
