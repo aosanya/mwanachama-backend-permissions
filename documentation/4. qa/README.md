@@ -28,6 +28,14 @@ already tested for but `AddAction` was not — and a grant made to a padded
 subject (`" bob "`) answers `false` for the trimmed one, so a subject string
 fails closed rather than normalising into someone else's grants.
 
+`routes/lifecycle_security_test.go` (2026-09-27, ninth sweep) pins the grant
+lifecycle through the route: deleting a role stops every grant of it
+authorizing at once, and recreating the same code is refused (409) rather
+than reviving the old grants; a grant in `instance:a` authorizes nothing in
+`instance:A`, `instance:a/catalog`, `instance` or `instance:ab`; a
+`"deleted": true` in the create body is ignored; a withdrawn grant stops on
+the next check.
+
 ## Red by design
 
 `routes/grant_security_test.go`'s
