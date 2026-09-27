@@ -36,6 +36,8 @@ type PermissionsManager interface {
 	ListGrants(ctx context.Context, f models.GrantFilter) ([]models.Grant, error)
 	WithdrawGrant(ctx context.Context, subject, scope, roleCode string) error
 
+	Seed(ctx context.Context, roleCode, name string, operations ...[]byte) ([]models.RoleAction, error)
+
 	MayPerform(ctx context.Context, subject, scope, action string) (bool, error)
 	ActionsFor(ctx context.Context, subject, scope string) ([]string, error)
 }

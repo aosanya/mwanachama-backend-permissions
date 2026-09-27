@@ -32,6 +32,9 @@ func (*stubManager) ListGrants(context.Context, models.GrantFilter) ([]models.Gr
 	panic("unused")
 }
 func (*stubManager) WithdrawGrant(context.Context, string, string, string) error { panic("unused") }
+func (*stubManager) Seed(context.Context, string, string, ...[]byte) ([]models.RoleAction, error) {
+	panic("unused")
+}
 func (*stubManager) MayPerform(context.Context, string, string, string) (bool, error) {
 	panic("unused")
 }
