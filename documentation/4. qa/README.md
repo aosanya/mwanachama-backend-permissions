@@ -28,6 +28,12 @@ already tested for but `AddAction` was not — and a grant made to a padded
 subject (`" bob "`) answers `false` for the trimmed one, so a subject string
 fails closed rather than normalising into someone else's grants.
 
+`routes/lifecycle_test.go`'s `TestRoutes_FullLifecycleThroughARealServer`
+drives all 14 declared operations through a real `httptest.NewServer` and a
+real `http.Client` — not a hand-listed subset, and not a bare handler called
+with `httptest.NewRecorder()` — the coverage `PM1`'s own framing noted this
+module lacked.
+
 ## Red by design
 
 `routes/grant_security_test.go`'s
@@ -35,3 +41,14 @@ fails closed rather than normalising into someone else's grants.
 asserts that a grant's `granted_by` is never the value the request body
 claimed, and today it is (`PM5` on the board). It turns green when the fix
 lands; do not delete or invert it to get `go test ./...` green.
+
+`routes/grant_filter_bug_test.go`'s
+`TestPM6_OpenBug_ListGrantsIgnoresRoleCodeQueryParam` fails on purpose:
+`GET /permissions/grants?role_code=writer` should answer only that role's
+grants and today answers every role's (`PM6`).
+
+`routes/setactions_bug_test.go`'s
+`TestPM7_OpenBug_SetActionsWithoutActionsFieldWipesAndLocksTheRole` fails on
+purpose: `PUT /permissions/roles/{role_code}/actions` with a body missing
+the declared-required `actions` field should be refused, not silently wipe
+the role's actions and mark it `seeded` (`PM7`).
