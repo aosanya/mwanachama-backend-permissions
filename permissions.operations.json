@@ -1,0 +1,189 @@
+{
+  "operations": {
+    "may_perform": {
+      "method": "GET",
+      "path": "/check",
+      "call": "MayPerform",
+      "action": "permissions.check.read",
+      "title": "Check a permission",
+      "description": "Answer whether one subject may perform one action in one scope. This is the question the gate asks on every call; a caller asking it directly is usually building a screen, not enforcing anything.",
+      "args": [
+        {"from": "query", "as": "subject", "required": true, "description": "Whoever authenticated, exactly as they are recorded."},
+        {"from": "query", "as": "scope", "required": true, "description": "Where the question is asked, such as the instance key."},
+        {"from": "query", "as": "action", "required": true, "description": "The declared action in question."}
+      ],
+      "returns": [{"body": true}]
+    },
+    "actions_for": {
+      "method": "GET",
+      "path": "/subjects/{subject}/actions",
+      "call": "ActionsFor",
+      "action": "permissions.check.list",
+      "title": "List what a subject may do",
+      "description": "Every action one subject may perform in one scope, across all the bundles they hold. This is what a surface filters its offerings by; refusing the call is still what enforces the rule.",
+      "args": [
+        {"from": "path", "as": "subject", "description": "The subject to ask about."},
+        {"from": "query", "as": "scope", "required": true, "description": "The scope to ask about."}
+      ],
+      "returns": [{"body": true}]
+    },
+
+    "create_role": {
+      "method": "POST",
+      "path": "/roles",
+      "call": "CreateRole",
+      "status": 201,
+      "action": "permissions.role.create",
+      "title": "Declare a role",
+      "description": "Declare a named bundle of permitted actions. It permits nothing until actions are added to it.",
+      "args": [{"from": "body", "whole": true}],
+      "returns": [{"body": true}]
+    },
+    "get_role": {
+      "method": "GET",
+      "path": "/roles/{code}",
+      "call": "GetRole",
+      "action": "permissions.role.read",
+      "title": "Read a role",
+      "description": "Read one bundle by its code.",
+      "args": [{"from": "path", "as": "code", "description": "The bundle to read."}],
+      "returns": [{"body": true}]
+    },
+    "list_roles": {
+      "method": "GET",
+      "path": "/roles",
+      "call": "ListRoles",
+      "action": "permissions.role.list",
+      "title": "List roles",
+      "description": "List the bundles declared here, newest naming first.",
+      "args": [{"from": "query", "whole": true}],
+      "returns": [{"body": true}]
+    },
+    "update_role": {
+      "method": "PATCH",
+      "path": "/roles/{code}",
+      "call": "UpdateRole",
+      "action": "permissions.role.update",
+      "title": "Rename a role",
+      "description": "Change a bundle's name or its description. What it permits is changed through its actions, not here.",
+      "args": [
+        {"from": "body", "whole": true},
+        {"from": "path", "as": "code", "into": "Code", "description": "The bundle to change."}
+      ],
+      "returns": [{"body": true}]
+    },
+    "delete_role": {
+      "method": "DELETE",
+      "path": "/roles/{code}",
+      "call": "DeleteRole",
+      "status": 204,
+      "action": "permissions.role.delete",
+      "title": "Retire a role",
+      "description": "Retire a bundle. Every grant naming it stops permitting anything, and the grants themselves are kept so the trail survives.",
+      "args": [{"from": "path", "as": "code", "description": "The bundle to retire."}],
+      "returns": [{"body": true}]
+    },
+
+    "list_actions": {
+      "method": "GET",
+      "path": "/roles/{role_code}/actions",
+      "call": "ListActions",
+      "action": "permissions.role_action.list",
+      "title": "List a role's actions",
+      "description": "Every action one bundle permits, listed one by one. There are no patterns here on purpose: a pattern widens itself the next time somebody declares an operation.",
+      "args": [{"from": "path", "as": "role_code", "description": "The bundle to read."}],
+      "returns": [{"body": true}]
+    },
+    "add_action": {
+      "method": "POST",
+      "path": "/roles/{role_code}/actions",
+      "call": "AddAction",
+      "status": 201,
+      "action": "permissions.role_action.create",
+      "title": "Permit an action",
+      "description": "Add one action to a bundle. Refused on a bundle a seeding pass owns, because the next pass would silently undo it.",
+      "args": [
+        {"from": "path", "as": "role_code", "description": "The bundle to add to."},
+        {"from": "body", "as": "action", "required": true, "field": "RoleAction.action"}
+      ],
+      "returns": [{"body": true}]
+    },
+    "remove_action": {
+      "method": "DELETE",
+      "path": "/roles/{role_code}/actions/{action}",
+      "call": "RemoveAction",
+      "status": 204,
+      "action": "permissions.role_action.delete",
+      "title": "Stop permitting an action",
+      "description": "Remove one action from a bundle. Refused on a bundle a seeding pass owns.",
+      "args": [
+        {"from": "path", "as": "role_code", "description": "The bundle to remove from."},
+        {"from": "path", "as": "action", "description": "The action to remove."}
+      ],
+      "returns": [{"body": true}]
+    },
+    "set_actions": {
+      "method": "PUT",
+      "path": "/roles/{role_code}/actions",
+      "call": "SetActions",
+      "action": "permissions.role_action.replace",
+      "title": "Replace a role's actions",
+      "description": "Replace a bundle's whole list in one write, and mark it as owned by a seeding pass. This is how a deployment says which actions the mounted modules declare now, so the list is recomputed rather than maintained by hand.",
+      "args": [
+        {"from": "path", "as": "role_code", "description": "The bundle to replace."},
+        {"from": "body", "as": "actions", "required": true, "description": "The whole list, replacing whatever was there."}
+      ],
+      "returns": [{"body": true}]
+    },
+
+    "create_grant": {
+      "method": "POST",
+      "path": "/grants",
+      "call": "CreateGrant",
+      "status": 201,
+      "action": "permissions.grant.create",
+      "title": "Grant a role",
+      "description": "Give one subject one bundle in one scope. A grant that was withdrawn earlier is reinstated rather than duplicated.",
+      "args": [{"from": "body", "whole": true}],
+      "returns": [{"body": true}]
+    },
+    "list_grants": {
+      "method": "GET",
+      "path": "/grants",
+      "call": "ListGrants",
+      "action": "permissions.grant.list",
+      "title": "List grants",
+      "description": "The live grants matching the filter. Withdrawn ones are kept but never listed.",
+      "args": [{"from": "query", "whole": true}],
+      "returns": [{"body": true}]
+    },
+    "withdraw_grant": {
+      "method": "DELETE",
+      "path": "/grants/{subject}/{scope}/{role_code}",
+      "call": "WithdrawGrant",
+      "status": 204,
+      "action": "permissions.grant.delete",
+      "title": "Withdraw a grant",
+      "description": "Take a bundle back from a subject in one scope. The row is kept, so a revocation leaves a trail of what was held and when it stopped.",
+      "args": [
+        {"from": "path", "as": "subject", "description": "The subject to withdraw from."},
+        {"from": "path", "as": "scope", "description": "The scope to withdraw in."},
+        {"from": "path", "as": "role_code", "description": "The bundle to withdraw."}
+      ],
+      "returns": [{"body": true}]
+    }
+  },
+
+  "errors": {
+    "ErrInvalidRole": 400,
+    "ErrRoleNotFound": 404,
+    "ErrDuplicateRole": 409,
+    "ErrInvalidAction": 400,
+    "ErrInvalidScope": 400,
+    "ErrInvalidGrant": 400,
+    "ErrGrantNotFound": 404,
+    "ErrDuplicateGrant": 409,
+    "ErrSeededRole": 409,
+    "ErrNotPermitted": 403
+  }
+}

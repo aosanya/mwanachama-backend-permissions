@@ -1,0 +1,131 @@
+{
+  "module": "permissions",
+  "objects": [
+    {
+      "role": "role",
+      "description": "A named bundle of permitted actions, such as the one an owner holds or the one a read-only visitor holds. What it permits is the role_actions beside it; this row is only the name and why it exists.",
+      "fields": [
+        {
+          "name": "code",
+          "type": "string",
+          "description": "Stable key for the bundle, such as owner or viewer. Fixed at creation — every grant names it.",
+          "primary": true,
+          "matches": "code"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "description": "What the bundle is called in a listing.",
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "description": "What holding this bundle lets someone do, in the domain's own words. A bundle nobody can explain is the one that grows."
+        },
+        {
+          "name": "seeded",
+          "type": "bool",
+          "description": "Whether a seeding pass owns this bundle's actions and will rewrite them. A hand-made bundle is left alone."
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "description": "When the bundle was declared.",
+          "immutable": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp",
+          "description": "When it last changed."
+        },
+        {
+          "name": "deleted",
+          "type": "bool",
+          "description": "Whether it has been retired. A retired bundle permits nothing, and the grants naming it are kept so the trail survives."
+        }
+      ]
+    },
+    {
+      "role": "role_action",
+      "description": "One action a bundle permits. Actions are listed one by one and never matched by pattern: a pattern is a permission that widens itself the next time somebody declares an operation.",
+      "fields": [
+        {
+          "name": "role_code",
+          "type": "string",
+          "description": "The bundle this permission belongs to.",
+          "primary": true
+        },
+        {
+          "name": "action",
+          "type": "string",
+          "description": "The declared action it permits, such as the one an operation names. Compared exactly, never interpreted.",
+          "primary": true,
+          "matches": "action"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "description": "When the permission was added to the bundle.",
+          "immutable": true
+        }
+      ],
+      "indexes": [
+        {
+          "name": "role_action",
+          "description": "The permission check: does this bundle permit this action.",
+          "fields": ["role_code", "action"]
+        }
+      ]
+    },
+    {
+      "role": "grant",
+      "description": "One subject holding one bundle in one scope. Grants only ever add: nothing here takes a permission away, because a rule that subtracts needs a precedence order, and a precedence order is where an access-control system stops being possible to reason about.",
+      "fields": [
+        {
+          "name": "subject",
+          "type": "string",
+          "description": "Whoever authenticated, exactly as the caller supplied it. This module never interprets it and never resolves it to a person.",
+          "primary": true
+        },
+        {
+          "name": "scope",
+          "type": "string",
+          "description": "Where the bundle applies, as an opaque key the caller chooses. Compared exactly, with one reserved value: a scope of * applies everywhere.",
+          "primary": true,
+          "matches": "scope"
+        },
+        {
+          "name": "role_code",
+          "type": "string",
+          "description": "The bundle held.",
+          "primary": true
+        },
+        {
+          "name": "granted_by",
+          "type": "string",
+          "description": "The subject that made this grant, for the trail. Empty when a bootstrap made it, which is itself worth being able to see."
+        },
+        {
+          "name": "granted_at",
+          "type": "timestamp",
+          "description": "When it was made.",
+          "immutable": true
+        },
+        {
+          "name": "deleted",
+          "type": "bool",
+          "description": "Whether it has been withdrawn. Withdrawn grants are kept rather than removed, so a revocation leaves a trail of what was held and when it stopped."
+        }
+      ],
+      "indexes": [
+        {
+          "name": "subject_scope",
+          "description": "The permission check's first half: every live bundle this subject holds here.",
+          "fields": ["subject", "scope"],
+          "not_deleted": true
+        }
+      ]
+    }
+  ]
+}

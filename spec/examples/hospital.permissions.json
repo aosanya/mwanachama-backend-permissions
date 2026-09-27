@@ -1,0 +1,25 @@
+{
+  "module": "permissions",
+  "domain": "hospital",
+  "instance": "stmarys",
+  "objects": [
+    {
+      "role": "role",
+      "name": "privilege_set",
+      "table": "privilege_sets",
+      "description": "A clinical privilege set: what a credentialed practitioner of this kind may do here."
+    },
+    {
+      "role": "role_action",
+      "name": "privilege",
+      "table": "privileges",
+      "description": "One procedure or record the privilege set permits."
+    },
+    {
+      "role": "grant",
+      "name": "credential",
+      "table": "credentials",
+      "description": "One practitioner credentialed for one privilege set on one ward."
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+package mwanachamapermissions
+
+import (
+	"context"
+	"fmt"
+
+	"gorm.io/gorm"
+
+	"github.com/aosanya/mwanachama-backend-permissions/models"
+	"github.com/aosanya/mwanachama-backend-shared/spec"
+)
+
+type (
+	Role        = models.Role
+	RoleAction  = models.RoleAction
+	Grant       = models.Grant
+	RoleFilter  = models.RoleFilter
+	GrantFilter = models.GrantFilter
+)
+
+const ScopeEverywhere = models.ScopeEverywhere
+
+type PermissionsManager interface {
+	CreateRole(ctx context.Context, r models.Role) (models.Role, error)
+	GetRole(ctx context.Context, code string) (models.Role, error)
+	ListRoles(ctx context.Context, f models.RoleFilter) ([]models.Role, error)
+	UpdateRole(ctx context.Context, r models.Role) (models.Role, error)
+	DeleteRole(ctx context.Context, code string) error
+
+	AddAction(ctx context.Context, roleCode, action string) (models.RoleAction, error)
+	RemoveAction(ctx context.Context, roleCode, action string) error
+	ListActions(ctx context.Context, roleCode string) ([]models.RoleAction, error)
+	SetActions(ctx context.Context, roleCode string, actions []string) ([]models.RoleAction, error)
+
+	CreateGrant(ctx context.Context, g models.Grant) (models.Grant, error)
+	ListGrants(ctx context.Context, f models.GrantFilter) ([]models.Grant, error)
+	WithdrawGrant(ctx context.Context, subject, scope, roleCode string) error
+
+	MayPerform(ctx context.Context, subject, scope, action string) (bool, error)
+	ActionsFor(ctx context.Context, subject, scope string) ([]string, error)
+}
+
+type manager struct {
+	db    *gorm.DB
+	store *store
+	spec  *spec.Spec
+}
+
+func NewPermissionsManager(db *gorm.DB, s *spec.Spec) (PermissionsManager, error) {
+	st, err := newStore(db, s, map[string]any{
+		roleRole:       models.Role{},
+		roleRoleAction: models.RoleAction{},
+		roleGrant:      models.Grant{},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &manager{db: db, store: st, spec: s}, nil
+}
+
+func Migrate(db *gorm.DB, s *spec.Spec) error { return spec.Migrate(db, s) }
+
+func (m *manager) object(role string) spec.Object { return m.store.Object(role) }
+
+func (m *manager) table(role string) string { return m.store.Table(role) }
+
+func (m *manager) query(ctx context.Context, role string) *gorm.DB {
+	return m.store.Query(ctx, role)
+}
+
+// MayPerform is the question the whole module exists to answer. A subject may
+// perform an action in a scope when some live grant of theirs, made either
+// here or everywhere, names a live role that lists that action.
+//
+// It is one query because it is asked on every gated call.
+func (m *manager) MayPerform(ctx context.Context, subject, scope, action string) (bool, error) {
+	if subject == "" || scope == "" {
+		return false, nil
+	}
+	if !isAction(action) {
+		return false, ErrInvalidAction
+	}
+
+	grants := m.table(roleGrant)
+	actions := m.table(roleRoleAction)
+	roles := m.table(roleRole)
+
+	var n int64
+	err := m.db.WithContext(ctx).
+		Table(grants+" g").
+		Joins(fmt.Sprintf("join %s ra on ra.%s = g.%s", actions,
+			columnName("RoleCode"), columnName("RoleCode"))).
+		Joins(fmt.Sprintf("join %s r on r.%s = g.%s", roles,
+			columnName("Code"), columnName("RoleCode"))).
+		Where("g."+columnName("Subject")+" = ?", subject).
+		Where("g."+columnName("Scope")+" in (?, ?)", scope, models.ScopeEverywhere).
+		Where("g."+columnName("Deleted")+" = false").
+		Where("r."+columnName("Deleted")+" = false").
+		Where("ra."+columnName("Action")+" = ?", action).
+		Count(&n).Error
+	if err != nil {
+		return false, fmt.Errorf("permissions: may perform: %w", err)
+	}
+	return n > 0, nil
+}
+
+// ActionsFor is every action a subject may perform in a scope. It answers the
+// listing question — which tools to offer — where MayPerform answers the
+// gate. The gate is the enforcement; this is a convenience, and the two must
+// never be swapped.
+func (m *manager) ActionsFor(ctx context.Context, subject, scope string) ([]string, error) {
+	if subject == "" || scope == "" {
+		return nil, nil
+	}
+
+	grants := m.table(roleGrant)
+	actions := m.table(roleRoleAction)
+	roles := m.table(roleRole)
+
+	var out []string
+	err := m.db.WithContext(ctx).
+		Table(grants+" g").
+		Joins(fmt.Sprintf("join %s ra on ra.%s = g.%s", actions,
+			columnName("RoleCode"), columnName("RoleCode"))).
+		Joins(fmt.Sprintf("join %s r on r.%s = g.%s", roles,
+			columnName("Code"), columnName("RoleCode"))).
+		Where("g."+columnName("Subject")+" = ?", subject).
+		Where("g."+columnName("Scope")+" in (?, ?)", scope, models.ScopeEverywhere).
+		Where("g."+columnName("Deleted")+" = false").
+		Where("r."+columnName("Deleted")+" = false").
+		Distinct("ra."+columnName("Action")).
+		Order("ra."+columnName("Action")).
+		Pluck("ra."+columnName("Action"), &out).Error
+	if err != nil {
+		return nil, fmt.Errorf("permissions: actions for: %w", err)
+	}
+	return out, nil
+}
