@@ -40,6 +40,7 @@ type PermissionsManager interface {
 
 	MayPerform(ctx context.Context, subject, scope, action string) (bool, error)
 	ActionsFor(ctx context.Context, subject, scope string) ([]string, error)
+	ActionsAnywhere(ctx context.Context, subject string) ([]string, error)
 }
 
 type manager struct {
@@ -126,6 +127,34 @@ func (m *manager) ActionsFor(ctx context.Context, subject, scope string) ([]stri
 		Pluck("ra."+columnName("Action"), &out).Error
 	if err != nil {
 		return nil, fmt.Errorf("permissions: actions for: %w", err)
+	}
+	return out, nil
+}
+
+func (m *manager) ActionsAnywhere(ctx context.Context, subject string) ([]string, error) {
+	if subject == "" {
+		return nil, nil
+	}
+
+	grants := m.table(roleGrant)
+	actions := m.table(roleRoleAction)
+	roles := m.table(roleRole)
+
+	var out []string
+	err := m.db.WithContext(ctx).
+		Table(grants+" g").
+		Joins(fmt.Sprintf("join %s ra on ra.%s = g.%s", actions,
+			columnName("RoleCode"), columnName("RoleCode"))).
+		Joins(fmt.Sprintf("join %s r on r.%s = g.%s", roles,
+			columnName("Code"), columnName("RoleCode"))).
+		Where("g."+columnName("Subject")+" = ?", subject).
+		Where("g."+columnName("Deleted")+" = false").
+		Where("r."+columnName("Deleted")+" = false").
+		Distinct("ra."+columnName("Action")).
+		Order("ra."+columnName("Action")).
+		Pluck("ra."+columnName("Action"), &out).Error
+	if err != nil {
+		return nil, fmt.Errorf("permissions: actions anywhere: %w", err)
 	}
 	return out, nil
 }

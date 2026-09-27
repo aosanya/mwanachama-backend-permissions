@@ -39,3 +39,4 @@ func (*stubManager) MayPerform(context.Context, string, string, string) (bool, e
 	panic("unused")
 }
 func (*stubManager) ActionsFor(context.Context, string, string) ([]string, error) { panic("unused") }
+func (*stubManager) ActionsAnywhere(context.Context, string) ([]string, error)    { panic("unused") }
