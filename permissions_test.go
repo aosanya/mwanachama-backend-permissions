@@ -310,3 +310,49 @@ func TestSetActions_RefusesAMalformedActionBeforeWritingAny(t *testing.T) {
 		t.Errorf("a refused SetActions must leave the old list alone, got %+v", actions)
 	}
 }
+
+func TestActionsAnywhere_IsTheUnionAcrossEveryScope(t *testing.T) {
+	mgr := newTestManager(t)
+	ctx := context.Background()
+	seedViewer(t, mgr, ctx)
+
+	if _, err := mgr.CreateRole(ctx, permissions.Role{Code: "miner", Name: "Miner"}); err != nil {
+		t.Fatalf("CreateRole: %v", err)
+	}
+	if _, err := mgr.AddAction(ctx, "miner", "catalog.suggestion.file"); err != nil {
+		t.Fatalf("AddAction: %v", err)
+	}
+	if _, err := mgr.CreateGrant(ctx, permissions.Grant{Subject: alice, Scope: shop, RoleCode: "viewer"}); err != nil {
+		t.Fatalf("CreateGrant(shop): %v", err)
+	}
+	if _, err := mgr.CreateGrant(ctx, permissions.Grant{Subject: alice, Scope: other, RoleCode: "miner"}); err != nil {
+		t.Fatalf("CreateGrant(other): %v", err)
+	}
+
+	here, err := mgr.ActionsFor(ctx, alice, shop)
+	if err != nil {
+		t.Fatalf("ActionsFor: %v", err)
+	}
+	if len(here) != 2 {
+		t.Errorf("ActionsFor(shop) = %v, want only the viewer's two", here)
+	}
+
+	anywhere, err := mgr.ActionsAnywhere(ctx, alice)
+	if err != nil {
+		t.Fatalf("ActionsAnywhere: %v", err)
+	}
+	if len(anywhere) != 3 {
+		t.Fatalf("ActionsAnywhere = %v, want the union of both scopes", anywhere)
+	}
+
+	if err := mgr.WithdrawGrant(ctx, alice, other, "miner"); err != nil {
+		t.Fatalf("WithdrawGrant: %v", err)
+	}
+	after, err := mgr.ActionsAnywhere(ctx, alice)
+	if err != nil {
+		t.Fatalf("ActionsAnywhere: %v", err)
+	}
+	if len(after) != 2 {
+		t.Errorf("a withdrawn grant must leave the union, got %v", after)
+	}
+}
