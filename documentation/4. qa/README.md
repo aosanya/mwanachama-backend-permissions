@@ -21,6 +21,13 @@ Not covered yet: Postgres (`PM2`).
 carries a slash (`instance:abc/catalog`) can still be withdrawn through the
 route, with the slash sent as `%2F`, and permits nothing afterwards.
 
+`routes/action_security_test.go` pins two more refusals through the route:
+a role cannot be given a wildcard (`catalog.*`, `*`), miscased or empty
+action — the "no wildcards in `role_action`" rule, which `SetActions` was
+already tested for but `AddAction` was not — and a grant made to a padded
+subject (`" bob "`) answers `false` for the trimmed one, so a subject string
+fails closed rather than normalising into someone else's grants.
+
 ## Red by design
 
 `routes/grant_security_test.go`'s
