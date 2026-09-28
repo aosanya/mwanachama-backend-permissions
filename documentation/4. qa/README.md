@@ -36,9 +36,23 @@ than reviving the old grants; a grant in `instance:a` authorizes nothing in
 `"deleted": true` in the create body is ignored; a withdrawn grant stops on
 the next check.
 
+`routes/update_role_security_test.go` (2026-09-28, fifteenth sweep) pins that
+`PATCH /roles/writer` with a body naming `"code":"admin"` renames `writer` and
+leaves `admin` alone — the path outranks the body — and that the body cannot
+set `seeded` or `deleted`. `routes/grant_reinstate_security_test.go` pins that
+a withdrawn grant reinstated by a second caller records that caller as
+`granted_by`, not the body's claim and not the original grantor — the
+`reinstate` path writes the column separately from `CreateGrant`'s insert.
+
 ## Red by design
 
-**None.** PM5, the one red this section carried, was cleared 2026-09-27 and
+- `routes/role_seeded_security_test.go`'s
+  `TestPM6_OpenHole_CreateRoleTakesSeededFromTheRequestBody` (PM6, P2): a
+  role declared with `"seeded": true` in the body is stored seeded, and
+  `AddAction` on it then answers 409. Leave it red until `CreateRole` stops
+  taking `seeded` from the request.
+
+PM5, the red this section carried before, was cleared 2026-09-27 and
 its test kept as the regression guard it became:
 `routes/grant_security_test.go`'s
 `TestPM5_GrantedByIsNeverTakenFromTheRequestBody`.
