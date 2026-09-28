@@ -21,6 +21,15 @@ Not covered yet: Postgres (`PM2`).
 carries a slash (`instance:abc/catalog`) can still be withdrawn through the
 route, with the slash sent as `%2F`, and permits nothing afterwards.
 
+`routes/withdraw_subject_security_test.go` (2026-09-28, eighteenth sweep)
+pins the same for the subject: a grant to `team/alice` is withdrawn through
+`/grants/team%2Falice/…`, and a subject that is itself the literal text
+`a%2Fb` through `/grants/a%252Fb/…` — neither is left holding a grant no
+route can reach. `routes/repeated_query_security_test.go` pins that a
+repeated `subject` on `GET /check` and `GET /grants` is read the same way by
+both (the first value), so a screen listing grants and the check that
+enforces them cannot disagree about who was asked for.
+
 `routes/action_security_test.go` pins two more refusals through the route:
 a role cannot be given a wildcard (`catalog.*`, `*`), miscased or empty
 action — the "no wildcards in `role_action`" rule, which `SetActions` was
