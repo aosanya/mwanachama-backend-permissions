@@ -356,3 +356,31 @@ func TestActionsAnywhere_IsTheUnionAcrossEveryScope(t *testing.T) {
 		t.Errorf("a withdrawn grant must leave the union, got %v", after)
 	}
 }
+
+func TestPM6_OpenBug_DeleteRoleLeavesTheCodePermanentlyTaken(t *testing.T) {
+	mgr := newTestManager(t)
+	ctx := context.Background()
+
+	if _, err := mgr.CreateRole(ctx, permissions.Role{Code: "temp", Name: "Temp"}); err != nil {
+		t.Fatalf("CreateRole: %v", err)
+	}
+	if err := mgr.DeleteRole(ctx, "temp"); err != nil {
+		t.Fatalf("DeleteRole: %v", err)
+	}
+
+	roles, err := mgr.ListRoles(ctx, permissions.RoleFilter{})
+	if err != nil {
+		t.Fatalf("ListRoles: %v", err)
+	}
+	for _, r := range roles {
+		if r.Code == "temp" {
+			t.Fatalf("a retired role must not appear in ListRoles, got %+v", r)
+		}
+	}
+
+	if _, err := mgr.CreateRole(ctx, permissions.Role{Code: "temp", Name: "Temp Again"}); err != nil {
+		t.Fatalf("PM6 open bug: CreateRole(%q) after DeleteRole got %v, want success — "+
+			"ListRoles already treats a retired role's code as free, so CreateRole must too, "+
+			"not permanently lock it out with ErrDuplicateRole", "temp", err)
+	}
+}
