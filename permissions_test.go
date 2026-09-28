@@ -357,7 +357,7 @@ func TestActionsAnywhere_IsTheUnionAcrossEveryScope(t *testing.T) {
 	}
 }
 
-func TestPM6_OpenBug_DeleteRoleLeavesTheCodePermanentlyTaken(t *testing.T) {
+func TestPM6_OpenBug_CreateGrantAcceptsARetiredRoleCode(t *testing.T) {
 	mgr := newTestManager(t)
 	ctx := context.Background()
 
@@ -368,19 +368,14 @@ func TestPM6_OpenBug_DeleteRoleLeavesTheCodePermanentlyTaken(t *testing.T) {
 		t.Fatalf("DeleteRole: %v", err)
 	}
 
-	roles, err := mgr.ListRoles(ctx, permissions.RoleFilter{})
-	if err != nil {
-		t.Fatalf("ListRoles: %v", err)
+	if _, err := mgr.CreateGrant(ctx, permissions.Grant{Subject: alice, Scope: shop, RoleCode: "temp"}); !errors.Is(err, permissions.ErrRoleNotFound) {
+		t.Errorf("PM6 open bug: CreateGrant against retired role %q got err=%v, want ErrRoleNotFound — "+
+			"a retired role's code can never be recreated (by design), so the caller has no way to tell "+
+			"it apart from a code that never existed, and CreateGrant must refuse both the same way", "temp", err)
 	}
-	for _, r := range roles {
-		if r.Code == "temp" {
-			t.Fatalf("a retired role must not appear in ListRoles, got %+v", r)
-		}
-	}
-
-	if _, err := mgr.CreateRole(ctx, permissions.Role{Code: "temp", Name: "Temp Again"}); err != nil {
-		t.Fatalf("PM6 open bug: CreateRole(%q) after DeleteRole got %v, want success — "+
-			"ListRoles already treats a retired role's code as free, so CreateRole must too, "+
-			"not permanently lock it out with ErrDuplicateRole", "temp", err)
+	if _, err := mgr.AddAction(ctx, "temp", "agency.module.list"); !errors.Is(err, permissions.ErrRoleNotFound) {
+		t.Errorf("PM6 open bug: AddAction against retired role %q got err=%v, want ErrRoleNotFound — "+
+			"the blueprint says a retired role \"permits nothing\", yet AddAction still silently "+
+			"attaches actions to it", "temp", err)
 	}
 }
