@@ -53,6 +53,12 @@ a withdrawn grant reinstated by a second caller records that caller as
 `granted_by`, not the body's claim and not the original grantor — the
 `reinstate` path writes the column separately from `CreateGrant`'s insert.
 
+`routes/set_actions_atomic_security_test.go` (2026-09-28, nineteenth sweep)
+pins that a `PUT /roles/writer/actions` the store refuses — one naming the
+same action twice — leaves the role's previous list whole and every grant of
+it still authorizing: the replace is one transaction, so a failed seeding
+pass cannot strip a role half way.
+
 ## Red by design
 
 - `routes/role_seeded_security_test.go`'s
