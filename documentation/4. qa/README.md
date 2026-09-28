@@ -38,8 +38,25 @@ the next check.
 
 ## Red by design
 
+**None.** PM5, the one red this section carried, was cleared 2026-09-27 and
+its test kept as the regression guard it became:
 `routes/grant_security_test.go`'s
-`TestPM5_OpenHole_GrantedByIsTakenFromTheRequestBody` fails on purpose: it
-asserts that a grant's `granted_by` is never the value the request body
-claimed, and today it is (`PM5` on the board). It turns green when the fix
-lands; do not delete or invert it to get `go test ./...` green.
+`TestPM5_GrantedByIsNeverTakenFromTheRequestBody`.
+
+Three tests hold the grantor now, and the second two were added with the fix:
+
+- `TestPM5_GrantedByIsNeverTakenFromTheRequestBody` — the stored `granted_by`
+  is never the value the body claimed.
+- `TestPM5_TheMountSuppliesTheGrantor` — mounted through
+  `routes.Mount{Caller: …}`, the stored `granted_by` **is** the caller the
+  mount supplied, so the fix records the trail rather than emptying it.
+- `TestPM5_AGrantorArgumentIsNeverOfferedToAnAgent` — `create_grant` binds
+  `GrantedBy` only `from: "caller"`, read off the shipped spec, so a later
+  edit cannot quietly move it back to the body.
+
+`create_grant` declares
+`{"from": "caller", "as": "granted_by", "into": "GrantedBy"}`, a source
+`mwanachama-backend-shared`'s `dispatch` gained for catalog's CAT12 and which
+was extended to whole-body overwrites for this row (S23 there). A mount that
+supplies no `Caller` records `""` — never the request's value — which is what
+`routes.Routes(pm)` still does, since nothing mounts these routes yet.

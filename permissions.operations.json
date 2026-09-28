@@ -144,7 +144,9 @@
       "action": "permissions.grant.create",
       "title": "Grant a role",
       "description": "Give one subject one bundle in one scope. A grant that was withdrawn earlier is reinstated rather than duplicated.",
-      "args": [{"from": "body", "whole": true}],
+      "args": [{"from": "body", "whole": true},
+               {"from": "caller", "as": "granted_by", "into": "GrantedBy",
+                "description": "The subject that made this grant, supplied by the mount. Never read from the request."}],
       "returns": [{"body": true}]
     },
     "list_grants": {

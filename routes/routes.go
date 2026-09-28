@@ -31,16 +31,24 @@ var sentinels = map[string]error{
 
 var AnonymousActions []string
 
-func Build(pm permissions.PermissionsManager) ([]Route, error) {
+type Mount struct {
+	Caller dispatch.Caller
+}
+
+func Build(pm permissions.PermissionsManager) ([]Route, error) { return BuildFor(pm, Mount{}) }
+
+func BuildFor(pm permissions.PermissionsManager, m Mount) ([]Route, error) {
 	s, err := operations()
 	if err != nil {
 		return nil, err
 	}
-	return dispatch.Dispatch(s, dispatch.Deps{Manager: pm, Errors: sentinels})
+	return dispatch.Dispatch(s, dispatch.Deps{Manager: pm, Errors: sentinels, Caller: m.Caller})
 }
 
-func Routes(pm permissions.PermissionsManager) []Route {
-	out, err := Build(pm)
+func Routes(pm permissions.PermissionsManager) []Route { return RoutesFor(pm, Mount{}) }
+
+func RoutesFor(pm permissions.PermissionsManager, m Mount) []Route {
+	out, err := BuildFor(pm, m)
 	if err != nil {
 		panic(fmt.Sprintf("permissions routes: %v", err))
 	}

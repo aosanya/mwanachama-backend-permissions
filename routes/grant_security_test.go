@@ -48,7 +48,7 @@ func send(t *testing.T, mux *http.ServeMux, method, path, body string) *httptest
 	return rec
 }
 
-func TestPM5_OpenHole_GrantedByIsTakenFromTheRequestBody(t *testing.T) {
+func TestPM5_GrantedByIsNeverTakenFromTheRequestBody(t *testing.T) {
 	mux := mountPermissions(t)
 	if rec := send(t, mux, "POST", "/permissions/roles", `{"code":"writer","name":"Writer"}`); rec.Code != http.StatusCreated {
 		t.Fatalf("precondition: create role answered %d %s", rec.Code, rec.Body.String())
