@@ -53,6 +53,16 @@ a withdrawn grant reinstated by a second caller records that caller as
 `granted_by`, not the body's claim and not the original grantor — the
 `reinstate` path writes the column separately from `CreateGrant`'s insert.
 
+`seed_retired_security_test.go` (2026-09-28, twentieth sweep) pins what
+`Seed` does to a role somebody retired. `mwanachama-wakala-api`'s
+`cmd/seedrole` re-seeds `studio_operator` "whenever a module joins that
+list", so a deploy can run `Seed` over a role an operator retired to revoke
+everyone who held it. `Seed` finds the retired row, skips `CreateRole`, and
+rewrites the role's actions — but the role stays `deleted`, and its standing
+`*` grant still permits nothing (`MayPerform` false for every seeded action,
+`ActionsAnywhere` empty). Mutation-checked: dropping the retired-role
+predicate from `MayPerform`'s join turns it red.
+
 ## Red by design
 
 - `routes/role_seeded_security_test.go`'s
