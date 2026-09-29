@@ -95,6 +95,16 @@ an action the refused list named. Mutation-checked: dropping `SetActions`'
   role declared with `"seeded": true` in the body is stored seeded, and
   `AddAction` on it then answers 409. Leave it red until `CreateRole` stops
   taking `seeded` from the request.
+- `permissions_test.go`'s
+  `TestPM7_OpenBug_NameFilterTreatsUnderscoreAndPercentAsWildcards` (PM7,
+  bug): `ListRoles`' `name` filter builds its `LIKE` pattern from the
+  caller's search text with no escaping, so a literal `_`/`%` in the search
+  over- or under-matches. Leave it red until `ListRoles` escapes both
+  characters the way `mwanachama-backend-agency`'s `likeFilter` does.
+- `list_cap_test.go`'s `TestPM8_OpenBug_ListRolesHasNoDefaultCap` and
+  `TestPM8_OpenBug_ListGrantsHasNoDefaultCap` (PM8, bug): neither `ListRoles`
+  nor `ListGrants` calls `.Limit`, so a caller who names no limit gets the
+  whole live table. Leave both red until each gets a default cap.
 
 PM5, the red this section carried before, was cleared 2026-09-27 and
 its test kept as the regression guard it became:
