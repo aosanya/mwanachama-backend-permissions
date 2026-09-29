@@ -80,6 +80,14 @@ reads `deleted: true`, `GET /check` answers `false` for every action in every
 scope and `actions_for` is empty. Mutation-checked: dropping the retired-role
 predicate from `MayPerform`'s and `ActionsFor`'s joins turns four assertions red.
 
+`routes/set_actions_wildcard_security_test.go` (2026-09-29, twenty-fifth sweep)
+pins the replace door the same way `action_security_test.go` pins the add
+door: `PUT /roles/writer/actions` with a wildcard (`*`, `catalog.*`), a
+miscased or an empty action anywhere in the list answers 400, the role keeps
+the one action it held, and a subject granted the role still may not perform
+an action the refused list named. Mutation-checked: dropping `SetActions`'
+`isAction` refusal turns all four refusals red.
+
 ## Red by design
 
 - `routes/role_seeded_security_test.go`'s
