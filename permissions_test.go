@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	permissions "github.com/aosanya/mwanachama-backend-permissions"
+	"github.com/aosanya/mwanachama-backend-permissions/models"
 )
 
 const (
@@ -354,5 +355,37 @@ func TestActionsAnywhere_IsTheUnionAcrossEveryScope(t *testing.T) {
 	}
 	if len(after) != 2 {
 		t.Errorf("a withdrawn grant must leave the union, got %v", after)
+	}
+}
+
+func TestPM7_OpenBug_NameFilterTreatsUnderscoreAndPercentAsWildcards(t *testing.T) {
+	mgr := newTestManager(t)
+	ctx := context.Background()
+
+	names := []string{"AlphaXBeta", "Gamma Reader", "Delta Writer"}
+	for i, n := range names {
+		if _, err := mgr.CreateRole(ctx, permissions.Role{Code: "r" + string(rune('0'+i)), Name: n}); err != nil {
+			t.Fatalf("CreateRole(%q): %v", n, err)
+		}
+	}
+
+	literal, err := mgr.ListRoles(ctx, models.RoleFilter{Name: "Alpha_Beta"})
+	if err != nil {
+		t.Fatalf("ListRoles: %v", err)
+	}
+	if len(literal) != 0 {
+		t.Errorf("PM7 (bug) open: ListRoles(name=%q) matched %d role(s) (%v); "+
+			"a caller searching for the literal substring %q should match none of %v, "+
+			"not treat '_' as a single-character SQL wildcard", "Alpha_Beta", len(literal), literal, "Alpha_Beta", names)
+	}
+
+	everything, err := mgr.ListRoles(ctx, models.RoleFilter{Name: "_"})
+	if err != nil {
+		t.Fatalf("ListRoles: %v", err)
+	}
+	if len(everything) == len(names) {
+		t.Errorf("PM7 (bug) open: ListRoles(name=%q) returned all %d roles; "+
+			"a one-character search term should narrow the list, not widen it to everything "+
+			"because '_' is an unescaped SQL LIKE wildcard", "_", len(everything))
 	}
 }
