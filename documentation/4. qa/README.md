@@ -63,6 +63,15 @@ rewrites the role's actions — but the role stays `deleted`, and its standing
 `ActionsAnywhere` empty). Mutation-checked: dropping the retired-role
 predicate from `MayPerform`'s join turns it red.
 
+`routes/empty_subject_security_test.go` (2026-09-29, twenty-third sweep)
+pins that an empty subject is nobody: `POST /grants` with `"subject": ""` or
+no subject answers 400 and stores nothing, and `GET /check` with an empty or
+absent subject answers `false` even while a named subject holds a `*` grant
+of the action. A mount that hands an unauthenticated caller the empty subject
+therefore gets no permission from a grant nobody could have meant. Mutation-
+checked: dropping the empty-subject guards from `CreateGrant` and
+`MayPerform` together turns every assertion red.
+
 ## Red by design
 
 - `routes/role_seeded_security_test.go`'s
