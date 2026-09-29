@@ -88,6 +88,14 @@ the one action it held, and a subject granted the role still may not perform
 an action the refused list named. Mutation-checked: dropping `SetActions`'
 `isAction` refusal turns all four refusals red.
 
+`routes/forged_clock_security_test.go` (2026-09-29, twenty-sixth sweep) pins
+that a write keeps the server's clock and liveness: `POST /roles` with body
+`created_at`/`updated_at` of 1999 and `deleted: true`, `POST /roles/reader/actions`
+with a 1999 `created_at` and `role_code: "writer"`, and `POST /grants` with a
+1999 `granted_at` and `deleted: true` all answer 201 with the server's time,
+`deleted: false`, and the action on the role the path names. Mutation-checked
+against `grant.go`'s `GrantedAt, Deleted` overwrite.
+
 ## Red by design
 
 - `routes/role_seeded_security_test.go`'s
