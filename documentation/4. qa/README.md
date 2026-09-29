@@ -72,6 +72,14 @@ therefore gets no permission from a grant nobody could have meant. Mutation-
 checked: dropping the empty-subject guards from `CreateGrant` and
 `MayPerform` together turns every assertion red.
 
+`routes/retired_role_edit_security_test.go` (2026-09-29, twenty-fourth sweep)
+pins that editing a retired role revives nothing: after `DELETE /roles/writer`,
+`PUT /roles/writer/actions` and `PATCH /roles/writer` (body `"deleted": false`)
+both answer 200, and a fresh `*` grant of it is stored, yet the role still
+reads `deleted: true`, `GET /check` answers `false` for every action in every
+scope and `actions_for` is empty. Mutation-checked: dropping the retired-role
+predicate from `MayPerform`'s and `ActionsFor`'s joins turns four assertions red.
+
 ## Red by design
 
 - `routes/role_seeded_security_test.go`'s
