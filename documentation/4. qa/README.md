@@ -143,6 +143,19 @@ skipping `CreateRole`'s duplicate check turns it red.
   `TestPM8_OpenBug_ListGrantsHasNoDefaultCap` (PM8, bug): neither `ListRoles`
   nor `ListGrants` calls `.Limit`, so a caller who names no limit gets the
   whole live table. Leave both red until each gets a default cap.
+- `action_setactions_test.go`'s
+  `TestPM9_OpenBug_SetActionsRejectsADuplicateActionInTheList` (PM9, bug):
+  `SetActions` fails outright on a duplicate action in its own input list
+  instead of de-duplicating it, surfacing the store's unique-constraint
+  error straight to the caller. Leave it red until `SetActions`
+  de-duplicates `actions` before the insert loop.
+- `grant_retired_role_test.go`'s `TestPM10_OpenBug_CreateGrantAcceptsARetiredRole`
+  (PM10, bug): `CreateGrant` for a role code that was created and then
+  deleted stores the grant with no error, the same way it would for a role
+  that never existed — except `MayPerform` will silently deny it forever,
+  with no signal to the caller at write time. Leave it red until
+  `CreateGrant` refuses a retired role the way it already refuses an
+  unknown one.
 
 PM5, the red this section carried before, was cleared 2026-09-27 and
 its test kept as the regression guard it became:
