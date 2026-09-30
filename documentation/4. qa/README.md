@@ -103,6 +103,18 @@ it red. The same run measured the check under load — one subject holding
 3,000 grants of a 2,000-action role answers `/check` in ~0.2 ms and
 `actions_for` (18,892 bytes) in ~3 ms: one query each, not one per grant.
 
+`grant_key_security_test.go` (2026-09-30, thirty-sixth sweep) pins that the
+one-grant-per-(subject, scope, role) rule lives in the store, not only in
+`CreateGrant`'s read-then-insert: a second live row for the same key,
+inserted straight into the table past the pre-check (what a racing grant
+would do), is refused, the table holds one row, and one `WithdrawGrant`
+leaves the subject unable to act. This is what keeps revocation whole on
+Postgres, where two concurrent `POST /grants` both pass the pre-check.
+Mutation-checked: widening the blueprint's grant key with `granted_at`
+stores the second row and turns two assertions red. (Dropping `scope`
+alone from the key leaves it green — `(subject, role_code)` still
+collides — and dropping every key field is refused at load.)
+
 ## Red by design
 
 - `routes/role_seeded_security_test.go`'s
