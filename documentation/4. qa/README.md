@@ -88,6 +88,21 @@ the one action it held, and a subject granted the role still may not perform
 an action the refused list named. Mutation-checked: dropping `SetActions`'
 `isAction` refusal turns all four refusals red.
 
+`routes/forged_clock_security_test.go` (2026-09-30, thirty-fourth sweep) pins
+that the server owns every clock: `POST /roles` claiming a 1999
+`created_at`/`updated_at` and `"deleted": true`, `PATCH /roles/writer`
+claiming either timestamp, `POST /roles/writer/actions` claiming a
+`created_at` and `POST /grants` claiming a `granted_at` and `"deleted": true`
+all store the server's own time and a live row, and the grant still permits.
+`routes/everywhere_question_security_test.go` pins that `*` is a scope a
+grant can hold, never one a question can ask in: a subject holding a role
+only in `instance:a` answers `false` on `GET /check?scope=*` and `[]` on
+`GET /subjects/{subject}/actions?scope=*`. Mutation-checked: letting
+`MayPerform`'s scope predicate also match when the asked scope is `*` turns
+it red. The same run measured the check under load — one subject holding
+3,000 grants of a 2,000-action role answers `/check` in ~0.2 ms and
+`actions_for` (18,892 bytes) in ~3 ms: one query each, not one per grant.
+
 ## Red by design
 
 - `routes/role_seeded_security_test.go`'s
