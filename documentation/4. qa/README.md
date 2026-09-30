@@ -115,6 +115,17 @@ stores the second row and turns two assertions red. (Dropping `scope`
 alone from the key leaves it green — `(subject, role_code)` still
 collides — and dropping every key field is refused at load.)
 
+`routes/retired_code_reuse_security_test.go` (2026-09-30, thirty-eighth
+sweep) pins that a retired role's code stays taken: after `DELETE
+/roles/writer`, `POST /grants` of `writer` to `mallory` in `*` (PM10's door)
+is stored, but `POST /roles {"code":"writer"}` answers `409 that role code is
+taken`, and after `writer` is given `catalog.entry.delete`, `GET /check` for
+`mallory` still answers `false`. A grant stored against a retired code
+therefore never wakes up under a new role of the same name — which a fix for
+PM10 that teaches `findRole` to skip retired rows must not undo, since
+`CreateRole` uses the same lookup for its duplicate check. Mutation-checked:
+skipping `CreateRole`'s duplicate check turns it red.
+
 ## Red by design
 
 - `routes/role_seeded_security_test.go`'s
