@@ -156,6 +156,27 @@ reducing `isCode` to non-empty turns seven assertions red.
   `TestPM8_OpenBug_ListGrantsHasNoDefaultCap` (PM8, bug): neither `ListRoles`
   nor `ListGrants` calls `.Limit`, so a caller who names no limit gets the
   whole live table. Leave both red until each gets a default cap.
+- `action_setactions_test.go`'s
+  `TestPM9_OpenBug_SetActionsRejectsADuplicateActionInTheList` (PM9, bug):
+  `SetActions` inserts the caller's `actions` list verbatim with no
+  de-duplication, so a repeated entry hits `role_action`'s composite primary
+  key and the whole replace rolls back with a raw constraint error. Leave it
+  red until `SetActions` de-duplicates before inserting.
+- `grant_retired_role_test.go`'s `TestPM10_OpenBug_CreateGrantAcceptsARetiredRole`
+  (PM10, bug): `CreateGrant`'s existence check (`findRole`) does not filter
+  `Deleted`, so a brand-new grant can be minted against an already-retired
+  role code and reads back as an ordinary live grant that `MayPerform`
+  silently denies forever. Leave it red until `CreateGrant` refuses a
+  retired role the way it already refuses an unknown one.
+- `grant_race_test.go`'s `TestPM11_OpenBug_ConcurrentCreateGrantOnANewKeyFailsInstead`
+  (PM11, bug) and `role_race_test.go`'s
+  `TestPM12_OpenBug_ConcurrentCreateRoleOnANewCodeFailsInstead` (PM12, bug):
+  `CreateGrant` and `CreateRole` each check-then-insert with no
+  `isUniqueViolation` recovery anywhere in this repo, so two callers racing
+  the same brand-new key leave one of them with a raw SQL constraint error
+  instead of a clean success or domain-level duplicate answer. Leave both
+  red until each insert recognises and recovers from its own unique
+  violation.
 
 PM5, the red this section carried before, was cleared 2026-09-27 and
 its test kept as the regression guard it became:
