@@ -130,6 +130,15 @@ PM10 that teaches `findRole` to skip retired rows must not undo, since
 `CreateRole` uses the same lookup for its duplicate check. Mutation-checked:
 skipping `CreateRole`'s duplicate check turns it red.
 
+`routes/role_code_shape_security_test.go` (2026-10-01, fifty-first sweep)
+pins that no second role can be declared that only reads like an existing
+one: beside `writer`, the codes `Writer`, `writer `, ` writer`, a Cyrillic
+`wrіter`, `a/b`, `..` and `writer%00` each answer `400 a role needs a code
+and a name`, a grant naming `Writer`, `WRITER` or `writer ` answers `404 no
+such role`, and the check for the subject stays `false`. A reviewer reading
+a grant's role code therefore reads the one role it names. Mutation-checked:
+reducing `isCode` to non-empty turns seven assertions red.
+
 ## Red by design
 
 - `routes/role_seeded_security_test.go`'s
