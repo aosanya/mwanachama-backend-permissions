@@ -48,7 +48,11 @@ the next check.
 `routes/update_role_security_test.go` (2026-09-28, fifteenth sweep) pins that
 `PATCH /roles/writer` with a body naming `"code":"admin"` renames `writer` and
 leaves `admin` alone — the path outranks the body — and that the body cannot
-set `seeded` or `deleted`. `routes/grant_reinstate_security_test.go` pins that
+set `seeded` or `deleted`. `routes/rename_seeded_security_test.go`
+(2026-10-01, forty-fifth sweep) pins the other direction: a `PATCH` whose
+body says `"seeded":false` leaves a role a seeding pass owns sealed, and the
+next `POST …/actions` on it still answers 409.
+`routes/grant_reinstate_security_test.go` pins that
 a withdrawn grant reinstated by a second caller records that caller as
 `granted_by`, not the body's claim and not the original grantor — the
 `reinstate` path writes the column separately from `CreateGrant`'s insert.
