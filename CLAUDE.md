@@ -42,7 +42,9 @@ about every noun so the claim is tested rather than asserted.
   row structs and no `AutoMigrate`. Adding a field means editing the
   blueprint and the `models/` type together — they are checked against each
   other when the manager is built.
-- **A table is `<instance>_permissions_<table>`.**
+- **A table is `<instance>_hashOf(<mount>)_hashOf(permissions_<table>)`** — only
+  the instance segment stays readable. Ask the spec (`TableFor`) for a
+  physical name and `RawNameFor` for the logical one; never spell either out.
 - **Every operation carries an `action`**, because that is what this module
   stores. `AnonymousActions` is deliberately empty: nothing here is readable
   without presenting a caller.

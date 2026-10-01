@@ -29,6 +29,11 @@ func TestTheStoreRefusesASecondGrantRowForOneSubjectScopeAndRole_SoOneWithdrawal
 	if err != nil {
 		t.Fatalf("NewPermissionsManager: %v", err)
 	}
+	grantObject, ok := s.ByRole("grant")
+	if !ok {
+		t.Fatal("the spec fills no object for the role grant")
+	}
+	grants := s.TableFor(grantObject)
 
 	if _, err := pm.CreateRole(ctx, models.Role{Code: "writer", Name: "Writer"}); err != nil {
 		t.Fatalf("CreateRole: %v", err)
@@ -47,11 +52,11 @@ func TestTheStoreRefusesASecondGrantRowForOneSubjectScopeAndRole_SoOneWithdrawal
 		"subject": "bob", "scope": "module:catalog", "role_code": "writer",
 		"granted_by": "racer", "granted_at": "2026-09-30T00:00:00Z", "deleted": false,
 	}
-	if err := db.WithContext(ctx).Table("agency_permissions_grants").Create(second).Error; err == nil {
+	if err := db.WithContext(ctx).Table(grants).Create(second).Error; err == nil {
 		t.Errorf("a second live grant row for (bob, module:catalog, writer) was stored past CreateGrant's pre-check; a racing grant would survive the withdrawal of the first")
 	}
 	var rows int64
-	if err := db.WithContext(ctx).Table("agency_permissions_grants").Where("subject = ? and scope = ? and role_code = ?", "bob", "module:catalog", "writer").Count(&rows).Error; err != nil {
+	if err := db.WithContext(ctx).Table(grants).Where("subject = ? and scope = ? and role_code = ?", "bob", "module:catalog", "writer").Count(&rows).Error; err != nil {
 		t.Fatalf("count: %v", err)
 	}
 	if rows != 1 {
