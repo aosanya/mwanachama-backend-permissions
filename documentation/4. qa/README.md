@@ -45,6 +45,15 @@ than reviving the old grants; a grant in `instance:a` authorizes nothing in
 `"deleted": true` in the create body is ignored; a withdrawn grant stops on
 the next check.
 
+`routes/removed_action_security_test.go` (2026-10-02, sixty-third sweep) pins
+the other half of a role's lifecycle: an action taken off a role stops
+authorizing through every grant already standing on it, at once. `DELETE
+/roles/editor/actions/catalog.entry.delete` turns erin's `/check` for that
+action from `true` to `false` while the role's other action stays `true`, and a
+`PUT /roles/curator/actions` that narrows the list does the same for finn's
+`*` grant. Mutation-checked: pointing `RemoveAction`'s delete at a different
+action turns the first test red.
+
 `routes/update_role_security_test.go` (2026-09-28, fifteenth sweep) pins that
 `PATCH /roles/writer` with a body naming `"code":"admin"` renames `writer` and
 leaves `admin` alone — the path outranks the body — and that the body cannot
