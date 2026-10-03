@@ -7,7 +7,7 @@ The cross-repo rows that put this module into service — the `dispatch` gate,
 the seeding pass, the wakala-api mount, the membership migration, the
 `tools/list` filter and the Modules screen — are `DSN-1734`…`DSN-1739` on
 `developer`'s design board; see
-[architecture-permissions.md](../../../developer/documentation/2.%20design/architecture-permissions.md).
+[architecture-permissions.md](../../../mwanachama-developer/documentation/2.%20design/architecture-permissions.md).
 
 | Task | Title | Status | Notes |
 |------|-------|--------|-------|

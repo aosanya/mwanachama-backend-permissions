@@ -1,7 +1,7 @@
 # Permissions — why it is shaped this way
 
 The cross-repo design record is
-[architecture-permissions.md](../../../developer/documentation/2.%20design/architecture-permissions.md).
+[architecture-permissions.md](../../../mwanachama-developer/documentation/2.%20design/architecture-permissions.md).
 This page carries what would otherwise be comments in the source.
 
 ## It names no domain, and that is the point
