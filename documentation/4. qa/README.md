@@ -76,6 +76,17 @@ rewrites the role's actions — but the role stays `deleted`, and its standing
 `ActionsAnywhere` empty). Mutation-checked: dropping the retired-role
 predicate from `MayPerform`'s join turns it red.
 
+`scope_match_security_test.go` (2026-10-03, sixty-sixth sweep) pins that
+`MayPerform` matches a grant by equality and nothing looser: a grant to
+`member-a` on `instance:alpha` for `example.thing.update` authorizes no
+longer, shorter, upper-cased, slash- or colon-extended scope, no `%`/`_`
+wildcard scope or subject, no near-miss action, and not `*`; a
+case-variant action is `ErrInvalidAction`. Its second test pins that a
+retired role cannot come back under the same code: `CreateRole` answers
+`ErrDuplicateRole`, a rename and an added action leave it retired, and its
+standing grant still permits nothing. Mutation-checked: matching the scope
+as a prefix `LIKE` turns four scope cases red.
+
 `routes/empty_subject_security_test.go` (2026-09-29, twenty-third sweep)
 pins that an empty subject is nobody: `POST /grants` with `"subject": ""` or
 no subject answers 400 and stores nothing, and `GET /check` with an empty or
