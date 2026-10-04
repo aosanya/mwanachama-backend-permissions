@@ -200,6 +200,13 @@ reducing `isCode` to non-empty turns seven assertions red.
   success, a domain-level duplicate answer, or the no-op `AddAction` already
   guarantees for a non-racing repeat. Leave all three red until each insert
   recognises and recovers from its own unique violation.
+- `role_list_order_test.go`'s
+  `TestPM14_OpenBug_ListRolesIgnoresDeclaredNewestFirstOrder` (PM14, bug):
+  `permissions.operations.json`'s `list_roles` promises "newest naming
+  first", but `ListRoles` orders by `Code` alone, which is caller-chosen
+  free text with no relationship to declaration time. Leave it red until
+  `ListRoles` orders by `CreatedAt` descending (or the operation's
+  description is corrected to describe the order it actually gives).
 
 PM5, the red this section carried before, was cleared 2026-09-27 and
 its test kept as the regression guard it became:
