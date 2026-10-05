@@ -166,6 +166,14 @@ reducing `isCode` to non-empty turns seven assertions red.
   role declared with `"seeded": true` in the body is stored seeded, and
   `AddAction` on it then answers 409. Leave it red until `CreateRole` stops
   taking `seeded` from the request.
+- `routes/set_actions_absent_list_security_test.go`'s
+  `TestPM14_OpenHole_ReplaceWithNoActionsKeyStripsEveryActionFromTheRole`
+  (PM14, P2): `PUT /roles/{code}/actions` with `{}`, `{"actions":null}` or
+  a misspelled `{"action":[…]}` answers `200 []` and deletes every action
+  the role carried, so a holder's `/check` turns from `true` to `false`.
+  `actions` is declared `required`, but the dispatcher binds an absent key
+  to `nil` (shared's S35). Leave it red until `SetActions` refuses a nil
+  list.
 - `permissions_test.go`'s
   `TestPM7_OpenBug_NameFilterTreatsUnderscoreAndPercentAsWildcards` (PM7,
   bug): `ListRoles`' `name` filter builds its `LIKE` pattern from the
