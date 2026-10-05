@@ -167,6 +167,20 @@ such role`, and the check for the subject stays `false`. A reviewer reading
 a grant's role code therefore reads the one role it names. Mutation-checked:
 reducing `isCode` to non-empty turns seven assertions red.
 
+`listing_matches_gate_security_test.go` (2026-10-05, eighty-ninth sweep) pins
+that the listing and the gate never disagree. `MayPerform`, `ActionsFor` and
+`ActionsAnywhere` are three hand-written copies of one join, so a review that
+asks "what may alice do in `instance:alpha`" reads a different query from the
+one that enforces it. Two subjects, three scopes (`instance:alpha`,
+`instance:beta`, `*`) and four actions are walked through every lifecycle step
+— grants scoped and `*`, an action removed from a granted role, a granted
+role's list replaced, the `*` grant withdrawn and reinstated, the role retired
+— and after each one an action is allowed exactly when `ActionsFor` lists it,
+and `ActionsAnywhere` lists exactly what the gate allows in some scope.
+Mutation-checked: dropping the retired-role predicate from `ActionsFor` alone
+turns it red at the retirement step, with the gate answering `false` while the
+listing still shows the role's three actions.
+
 ## Red by design
 
 - `routes/role_seeded_security_test.go`'s
