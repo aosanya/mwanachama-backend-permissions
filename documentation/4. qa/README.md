@@ -230,6 +230,12 @@ listing still shows the role's three actions.
   success, a domain-level duplicate answer, or the no-op `AddAction` already
   guarantees for a non-racing repeat. Leave all three red until each insert
   recognises and recovers from its own unique violation.
+- `list_order_test.go`'s `TestPM15_OpenBug_ListRolesIgnoresDeclaredNewestFirstOrder`
+  (PM15, bug): `permissions.operations.json`'s `list_roles` description
+  promises "newest naming first", but `ListRoles` orders by `Code` ascending
+  — the role created first, not last. Leave it red until `ListRoles` orders
+  by a timestamp descending, or the operation's own description is
+  corrected to say what it does.
 
 PM5, the red this section carried before, was cleared 2026-09-27 and
 its test kept as the regression guard it became:
