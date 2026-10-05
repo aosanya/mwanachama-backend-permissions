@@ -247,6 +247,13 @@ Three tests hold the grantor now, and the second two were added with the fix:
   `GrantedBy` only `from: "caller"`, read off the shipped spec, so a later
   edit cannot quietly move it back to the body.
 
+`routes/grantor_key_spelling_security_test.go` (2026-10-05, ninetieth sweep)
+widens the first: a body claiming `granted_by` as `granted_by`,
+`GRANTED_BY`, `Granted_By` or twice over stores the mount's caller every
+time — `""` under a mount with no caller, the subject under one that
+supplies it. Mutation-checked: letting the dispatcher skip an empty caller
+instead of writing it turns all four no-caller spellings red.
+
 `create_grant` declares
 `{"from": "caller", "as": "granted_by", "into": "GrantedBy"}`, a source
 `mwanachama-backend-shared`'s `dispatch` gained for catalog's CAT12 and which
