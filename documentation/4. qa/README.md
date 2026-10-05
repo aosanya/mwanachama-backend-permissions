@@ -96,6 +96,14 @@ therefore gets no permission from a grant nobody could have meant. Mutation-
 checked: dropping the empty-subject guards from `CreateGrant` and
 `MayPerform` together turns every assertion red.
 
+`routes/empty_scope_security_test.go` (2026-10-05, eighty-eighth sweep) is
+the same rule for the other half of the question: a `/check` or
+`/subjects/{subject}/actions` that names no scope, empty or absent, answers
+`false` and lists nothing — for a subject granted in `instance:a` and for one
+granted in `*`, whose grant answers `true` in any named scope. An empty
+scope is not "everywhere". Mutation-checked: defaulting an empty scope to
+`*` in `MayPerform` and `ActionsFor` turns four assertions red.
+
 `routes/retired_role_edit_security_test.go` (2026-09-29, twenty-fourth sweep)
 pins that editing a retired role revives nothing: after `DELETE /roles/writer`,
 `PUT /roles/writer/actions` and `PATCH /roles/writer` (body `"deleted": false`)
