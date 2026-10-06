@@ -87,6 +87,14 @@ retired role cannot come back under the same code: `CreateRole` answers
 standing grant still permits nothing. Mutation-checked: matching the scope
 as a prefix `LIKE` turns four scope cases red.
 
+`role_code_revival_security_test.go` (2026-10-06, hundred-and-second
+sweep) widens that second test to every other spelling of the retired
+code: `Editor`, `EDITOR`, a leading or trailing space and a trailing
+newline are each refused by `CreateRole`'s code pattern, so no second role
+can sit beside the retired one under a near-identical name, and the
+retired role's standing grant still permits nothing. Mutation-checked:
+loosening the code check to "non-empty" turns three spellings red.
+
 `routes/empty_subject_security_test.go` (2026-09-29, twenty-third sweep)
 pins that an empty subject is nobody: `POST /grants` with `"subject": ""` or
 no subject answers 400 and stores nothing, and `GET /check` with an empty or
