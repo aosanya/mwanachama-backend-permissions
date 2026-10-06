@@ -244,6 +244,16 @@ listing still shows the role's three actions.
   — the role created first, not last. Leave it red until `ListRoles` orders
   by a timestamp descending, or the operation's own description is
   corrected to say what it does.
+- `routes/grant_filter_query_key_test.go`'s
+  `TestPM16_OpenBug_ListGrantsIgnoresTheDeclaredRoleCodeQueryKey` (PM16,
+  bug): `list_grants`' whole-query binding looks up a `query` struct tag on
+  `GrantFilter.RoleCode`, finds none, and falls back to the lowercased Go
+  field name `rolecode` — not `role_code`, the spelling the field's own
+  `json` tag and every response row use. `GET /permissions/grants?role_code=writer`
+  therefore returns every subject's grants, not just writer's. Leave it red
+  until `GrantFilter.RoleCode` gains a `query:"role_code"` tag (or
+  `dispatch.queryKey` falls back to a field's `json` tag before its
+  lowercased name).
 
 PM5, the red this section carried before, was cleared 2026-09-27 and
 its test kept as the regression guard it became:
