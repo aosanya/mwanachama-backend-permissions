@@ -95,6 +95,15 @@ can sit beside the retired one under a near-identical name, and the
 retired role's standing grant still permits nothing. Mutation-checked:
 loosening the code check to "non-empty" turns three spellings red.
 
+`routes/check_exact_match_security_test.go` (2026-10-06, hundred-and-tenth
+sweep) pins that `GET /check` answers only the exact subject and scope a
+grant names: `BOB`, `Bob`, `bob ` and the `LIKE` wildcards `bo_`/`b%` for a
+grant to `bob`, and `MODULE:CATALOG`, a NUL-suffixed scope, `module:catalo_`
+and `module:%` for a grant in `module:catalog`, all answer `false`; an
+upper-cased or wildcarded action is refused as malformed. Mutation-checked:
+matching the subject, or the scope, with `LIKE` instead of `=` (case-blind
+on sqlite) turns four cases red each.
+
 `routes/empty_subject_security_test.go` (2026-09-29, twenty-third sweep)
 pins that an empty subject is nobody: `POST /grants` with `"subject": ""` or
 no subject answers 400 and stores nothing, and `GET /check` with an empty or
