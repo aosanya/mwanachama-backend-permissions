@@ -52,3 +52,28 @@ func TestPM8_OpenBug_ListGrantsHasNoDefaultCap(t *testing.T) {
 		t.Fatalf("PM8 open bug: ListGrants(GrantFilter{}) with no limit returned all %d seeded grants; a caller who names no limit should get a capped default page, not the whole live table", len(got))
 	}
 }
+
+func TestPM16_OpenBug_ListActionsHasNoDefaultCap(t *testing.T) {
+	mgr := newTestManager(t)
+	ctx := context.Background()
+
+	if _, err := mgr.CreateRole(ctx, models.Role{Code: "writer", Name: "Writer"}); err != nil {
+		t.Fatalf("create role: %v", err)
+	}
+
+	const seeded = 150
+	for i := 0; i < seeded; i++ {
+		action := fmt.Sprintf("module_%03d.thing.do", i)
+		if _, err := mgr.AddAction(ctx, "writer", action); err != nil {
+			t.Fatalf("add action %d: %v", i, err)
+		}
+	}
+
+	got, err := mgr.ListActions(ctx, "writer")
+	if err != nil {
+		t.Fatalf("list actions: %v", err)
+	}
+	if len(got) >= seeded {
+		t.Fatalf("PM16 open bug: ListActions(\"writer\") with no limit returned all %d seeded actions; a caller who names no limit should get a capped default page, not a role's whole action set", len(got))
+	}
+}
