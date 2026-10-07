@@ -104,6 +104,17 @@ upper-cased or wildcarded action is refused as malformed. Mutation-checked:
 matching the subject, or the scope, with `LIKE` instead of `=` (case-blind
 on sqlite) turns four cases red each.
 
+`routes/repeated_withdraw_security_test.go` (2026-10-07, hundred-and-sixteenth
+sweep) pins that repetition revives nothing: withdrawing one grant three
+times answers `204` each time and leaves `/check` `false` and `/grants`
+empty after every one; re-granting, then retiring the role twice and
+removing its action twice, leaves `/check` `false` and `actions_for` empty.
+A second withdraw answers `204` where a grant never made answers `404 no
+such grant` — every caller of these routes is a permissions administrator,
+so that difference tells nobody anything they could not grant themselves,
+and it is not pinned either way. Mutation-checked: a withdraw that stops
+setting `deleted` turns three assertions red.
+
 `routes/empty_subject_security_test.go` (2026-09-29, twenty-third sweep)
 pins that an empty subject is nobody: `POST /grants` with `"subject": ""` or
 no subject answers 400 and stores nothing, and `GET /check` with an empty or
