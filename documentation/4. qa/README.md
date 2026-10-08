@@ -115,6 +115,18 @@ so that difference tells nobody anything they could not grant themselves,
 and it is not pinned either way. Mutation-checked: a withdraw that stops
 setting `deleted` turns three assertions red.
 
+`routes/check_fails_closed_security_test.go` (2026-10-08, hundred-and-twenty-first
+sweep) pins that the decision point fails closed when its storage does: with
+a live grant answering `true` first, then the connection closed or every
+table dropped, `GET /check` answers a non-`200` that never carries `true`,
+and `GET /subjects/bob/actions` names no action. wakala-api's
+`authorizer` (`internal/api/http/authorize.go`) already turns any
+`MayPerform` error into `ErrForbidden`, so this pins the other half of that
+contract. Prompted by the week's new OWASP *Authorization Decisions and
+Output Handling* sheet ("deny protected operations on PDP errors").
+Mutation-checked: making `MayPerform` answer `true, nil` on a query error
+turns both cases red.
+
 `routes/empty_subject_security_test.go` (2026-09-29, twenty-third sweep)
 pins that an empty subject is nobody: `POST /grants` with `"subject": ""` or
 no subject answers 400 and stores nothing, and `GET /check` with an empty or
