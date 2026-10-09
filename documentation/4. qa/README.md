@@ -246,6 +246,12 @@ listing still shows the role's three actions.
   `TestPM8_OpenBug_ListGrantsHasNoDefaultCap` (PM8, bug): neither `ListRoles`
   nor `ListGrants` calls `.Limit`, so a caller who names no limit gets the
   whole live table. Leave both red until each gets a default cap.
+- `list_cap_test.go`'s `TestPM16_OpenBug_ListActionsHasNoDefaultCap` (PM16,
+  bug): the same loophole a third time in this repo's own `List*` family —
+  `ListActions` builds `.Order(...).Find(&rows)` with no `.Limit` either, so
+  a role with 150 distinct actions added to it gets all 150 of 150 back from
+  one call. Leave it red until `ListActions` gets a default cap, ideally the
+  same fix PM8 lands on for `ListRoles`/`ListGrants`.
 - `action_setactions_test.go`'s
   `TestPM9_OpenBug_SetActionsRejectsADuplicateActionInTheList` (PM9, bug):
   `SetActions` inserts the caller's `actions` list verbatim with no
