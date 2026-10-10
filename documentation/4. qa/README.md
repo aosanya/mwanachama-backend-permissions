@@ -259,11 +259,14 @@ listing still shows the role's three actions.
   key and the whole replace rolls back with a raw constraint error. Leave it
   red until `SetActions` de-duplicates before inserting.
 - `grant_retired_role_test.go`'s `TestPM10_OpenBug_CreateGrantAcceptsARetiredRole`
-  (PM10, bug): `CreateGrant`'s existence check (`findRole`) does not filter
-  `Deleted`, so a brand-new grant can be minted against an already-retired
-  role code and reads back as an ordinary live grant that `MayPerform`
-  silently denies forever. Leave it red until `CreateGrant` refuses a
-  retired role the way it already refuses an unknown one.
+  and `action_retired_role_test.go`'s `TestPM10_OpenBug_AddActionAcceptsARetiredRole`
+  (PM10, bug): neither `CreateGrant` nor `AddAction`'s existence check
+  (`findRole`) filters `Deleted`, so a brand-new grant or a brand-new
+  `RoleAction` can both be minted against an already-retired role code —
+  the grant reads back as an ordinary live grant that `MayPerform`
+  silently denies forever, and the action gets a 201-shaped success that
+  never takes effect. Leave both red until `findRole`'s callers refuse a
+  retired role the way they already refuse an unknown one.
 - `grant_race_test.go`'s `TestPM11_OpenBug_ConcurrentCreateGrantOnANewKeyFailsInstead`
   (PM11, bug), `role_race_test.go`'s
   `TestPM12_OpenBug_ConcurrentCreateRoleOnANewCodeFailsInstead` (PM12, bug)
