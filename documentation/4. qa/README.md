@@ -293,6 +293,14 @@ listing still shows the role's three actions.
   key in the response. `?role_code=writer` silently lists every grant
   instead of narrowing to writer's. Leave it red until `GrantFilter` gains
   a matching `query` tag.
+- `delete_seeded_role_test.go`'s
+  `TestPM18_OpenBug_DeleteRoleDestroysASeededRoleForever` (PM18, bug):
+  `AddAction`/`RemoveAction` both refuse to touch a role once
+  `role.Seeded` is true, but `DeleteRole` runs no such check and retires
+  it outright — and because a retired code is permanently taken and
+  re-seeding a dead row is already inert by design, the deletion can
+  never be undone. Leave it red until `DeleteRole` checks `Seeded` the
+  way its two siblings already do.
 
 PM5, the red this section carried before, was cleared 2026-09-27 and
 its test kept as the regression guard it became:
