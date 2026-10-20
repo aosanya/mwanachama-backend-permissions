@@ -17,11 +17,14 @@ func (m *manager) CreateGrant(ctx context.Context, g models.Grant) (models.Grant
 	if !isScope(g.Scope) {
 		return models.Grant{}, ErrInvalidScope
 	}
+	if !isPartition(g.Partition) {
+		return models.Grant{}, ErrInvalidPartition
+	}
 	if _, err := m.findRole(ctx, g.RoleCode); err != nil {
 		return models.Grant{}, err
 	}
 
-	existing, err := m.findGrant(ctx, g.Subject, g.Scope, g.RoleCode)
+	existing, err := m.findGrant(ctx, g.Subject, g.Partition, g.Scope, g.RoleCode)
 	switch {
 	case err == nil && !existing.Deleted:
 		return models.Grant{}, ErrDuplicateGrant
@@ -45,7 +48,7 @@ func (m *manager) CreateGrant(ctx context.Context, g models.Grant) (models.Grant
 func (m *manager) reinstate(ctx context.Context, g models.Grant) (models.Grant, error) {
 	g.GrantedAt, g.Deleted = models.NowRFC3339(), false
 	err := m.query(ctx, roleGrant).
-		Where(keyOfGrant(), g.Subject, g.Scope, g.RoleCode).
+		Where(keyOfGrant(), g.Subject, g.Partition, g.Scope, g.RoleCode).
 		Updates(map[string]any{
 			columnName("Deleted"):   false,
 			columnName("GrantedAt"): g.GrantedAt,
@@ -59,14 +62,15 @@ func (m *manager) reinstate(ctx context.Context, g models.Grant) (models.Grant, 
 
 func keyOfGrant() string {
 	return columnName("Subject") + " = ? and " +
+		columnName("Partition") + " = ? and " +
 		columnName("Scope") + " = ? and " +
 		columnName("RoleCode") + " = ?"
 }
 
-func (m *manager) findGrant(ctx context.Context, subject, scope, roleCode string) (models.Grant, error) {
+func (m *manager) findGrant(ctx context.Context, subject, partition, scope, roleCode string) (models.Grant, error) {
 	var row map[string]any
 	err := m.query(ctx, roleGrant).
-		Where(keyOfGrant(), subject, scope, roleCode).
+		Where(keyOfGrant(), subject, partition, scope, roleCode).
 		Take(&row).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return models.Grant{}, ErrGrantNotFound
@@ -88,6 +92,9 @@ func (m *manager) ListGrants(ctx context.Context, f models.GrantFilter) ([]model
 	}
 	if f.Scope != "" {
 		q = q.Where(columnName("Scope")+" = ?", f.Scope)
+	}
+	if f.Partition != "" {
+		q = q.Where(columnName("Partition")+" = ?", f.Partition)
 	}
 	if f.RoleCode != "" {
 		q = q.Where(columnName("RoleCode")+" = ?", f.RoleCode)
@@ -111,7 +118,11 @@ func (m *manager) ListGrants(ctx context.Context, f models.GrantFilter) ([]model
 }
 
 func (m *manager) WithdrawGrant(ctx context.Context, subject, scope, roleCode string) error {
-	g, err := m.findGrant(ctx, subject, scope, roleCode)
+	return m.WithdrawGrantIn(ctx, subject, "", scope, roleCode)
+}
+
+func (m *manager) WithdrawGrantIn(ctx context.Context, subject, partition, scope, roleCode string) error {
+	g, err := m.findGrant(ctx, subject, partition, scope, roleCode)
 	if err != nil {
 		return err
 	}
@@ -119,7 +130,7 @@ func (m *manager) WithdrawGrant(ctx context.Context, subject, scope, roleCode st
 		return nil
 	}
 	err = m.query(ctx, roleGrant).
-		Where(keyOfGrant(), subject, scope, roleCode).
+		Where(keyOfGrant(), subject, partition, scope, roleCode).
 		Update(columnName("Deleted"), true).Error
 	if err != nil {
 		return fmt.Errorf("permissions: withdraw grant: %w", err)

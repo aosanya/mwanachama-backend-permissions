@@ -96,6 +96,12 @@
           "matches": "scope"
         },
         {
+          "name": "partition",
+          "type": "string",
+          "description": "Which partition of the deployment the grant holds in, as an opaque key the caller chooses. Empty means every partition, which is what every grant made before partitions existed means. A grant naming one partition never answers a question asked in another, nor one asked in none.",
+          "primary": true
+        },
+        {
           "name": "role_code",
           "type": "string",
           "description": "The bundle held.",

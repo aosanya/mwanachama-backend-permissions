@@ -32,6 +32,45 @@ posture `agency_instance_members.UserID` already takes.
 compared: `*` applies everywhere. The pattern exists because a scope reaches
 a comparison as data, and an unvalidated one is a row nobody can audit.
 
+**`partition`** (PM19) names which partition of the deployment a grant holds
+in — for a host that runs many independent tenants over one permissions
+store, the tenant the grant was made in. Like `scope` it is an opaque key the
+caller chooses, validated against `^[A-Za-z0-9][A-Za-z0-9_.:-]*$`, and the
+module never reads it for meaning. It is part of the grant's key, so one
+subject may hold the same role on the same scope in two partitions and lose
+one without the other.
+
+**Empty means every partition.** That is what every grant made before PM19
+means, and it keeps meaning it: an unpartitioned grant answers a question
+asked in any partition and one asked in none. A grant naming a partition
+answers only a question asked in that partition — never one asked in another,
+and never one asked outside every partition. So:
+
+| The grant names | Asked in `alpha` | Asked in `beta` | Asked in no partition |
+|---|---|---|---|
+| no partition | yes | yes | yes |
+| `alpha` | yes | no | no |
+
+`MayPerformIn(subject, partition, scope, action)` is the gate's question with
+a partition; `MayPerform(subject, scope, action)` is the same question asked
+in no partition, so every existing caller keeps its exact behaviour.
+`ActionsFor` lists in no partition too, matching `MayPerform`.
+`ActionsAnywhere` counts every grant, partitioned or not, because it answers
+what a subject might be offered somewhere, not what the gate will let through
+here. `WithdrawGrantIn` takes a partitioned grant back; `WithdrawGrant` takes
+back the one naming none. Over HTTP both the check and the withdrawal take an
+optional `partition` query parameter, and a grant carries `partition` in its
+body.
+
+**An existing grant table gains the column on the next `Migrate`.**
+`spec.Migrate` only creates what is absent (shared's S52), so `Migrate` adds
+`partition text not null default ''` to a grant table that lacks it — every
+old row reads back as naming no partition — and on Postgres re-keys the table
+to `(subject, scope, partition, role_code)`. SQLite cannot change a primary
+key in place; a SQLite store from before PM19 keeps its old key, which only
+matters once one subject is granted the same role on the same scope in two
+partitions.
+
 **`action`** is a declared action, validated against
 `^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$`. `MayPerform` refuses a malformed
 one rather than returning false, because a caller asking about `NOPE` has a

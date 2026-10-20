@@ -3,12 +3,13 @@
     "may_perform": {
       "method": "GET",
       "path": "/check",
-      "call": "MayPerform",
+      "call": "MayPerformIn",
       "action": "permissions.check.read",
       "title": "Check a permission",
-      "description": "Answer whether one subject may perform one action in one scope. This is the question the gate asks on every call; a caller asking it directly is usually building a screen, not enforcing anything.",
+      "description": "Answer whether one subject may perform one action in one scope, in one partition or in none. This is the question the gate asks on every call; a caller asking it directly is usually building a screen, not enforcing anything.",
       "args": [
         {"from": "query", "as": "subject", "required": true, "description": "Whoever authenticated, exactly as they are recorded."},
+        {"from": "query", "as": "partition", "description": "The partition the question is asked in. Absent asks outside every partition, where only a grant naming none answers."},
         {"from": "query", "as": "scope", "required": true, "description": "Where the question is asked, such as the instance key."},
         {"from": "query", "as": "action", "required": true, "description": "The declared action in question."}
       ],
@@ -162,13 +163,14 @@
     "withdraw_grant": {
       "method": "DELETE",
       "path": "/grants/{subject}/{scope}/{role_code}",
-      "call": "WithdrawGrant",
+      "call": "WithdrawGrantIn",
       "status": 204,
       "action": "permissions.grant.delete",
       "title": "Withdraw a grant",
       "description": "Take a bundle back from a subject in one scope. The row is kept, so a revocation leaves a trail of what was held and when it stopped.",
       "args": [
         {"from": "path", "as": "subject", "description": "The subject to withdraw from."},
+        {"from": "query", "as": "partition", "description": "The partition the grant names. Absent withdraws the grant that names none."},
         {"from": "path", "as": "scope", "description": "The scope to withdraw in."},
         {"from": "path", "as": "role_code", "description": "The bundle to withdraw."}
       ],
@@ -182,6 +184,7 @@
     "ErrDuplicateRole": 409,
     "ErrInvalidAction": 400,
     "ErrInvalidScope": 400,
+    "ErrInvalidPartition": 400,
     "ErrInvalidGrant": 400,
     "ErrGrantNotFound": 404,
     "ErrDuplicateGrant": 409,

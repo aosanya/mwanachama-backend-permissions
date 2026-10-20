@@ -12,6 +12,8 @@ var ErrInvalidAction = errors.New("permissions: that is not a well-formed action
 
 var ErrInvalidScope = errors.New("permissions: that is not a well-formed scope")
 
+var ErrInvalidPartition = errors.New("permissions: that is not a well-formed partition")
+
 var ErrInvalidGrant = errors.New("permissions: a grant needs a subject, a scope and a role")
 
 var ErrGrantNotFound = errors.New("permissions: no such grant")

@@ -7,7 +7,8 @@ type RoleFilter struct {
 }
 
 type GrantFilter struct {
-	Subject  string `json:"subject,omitempty"`
-	Scope    string `json:"scope,omitempty"`
-	RoleCode string `json:"role_code,omitempty"`
+	Subject   string `json:"subject,omitempty"`
+	Scope     string `json:"scope,omitempty"`
+	Partition string `json:"partition,omitempty"`
+	RoleCode  string `json:"role_code,omitempty"`
 }

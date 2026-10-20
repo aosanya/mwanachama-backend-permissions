@@ -35,10 +35,12 @@ type PermissionsManager interface {
 	CreateGrant(ctx context.Context, g models.Grant) (models.Grant, error)
 	ListGrants(ctx context.Context, f models.GrantFilter) ([]models.Grant, error)
 	WithdrawGrant(ctx context.Context, subject, scope, roleCode string) error
+	WithdrawGrantIn(ctx context.Context, subject, partition, scope, roleCode string) error
 
 	Seed(ctx context.Context, roleCode, name string, operations ...[]byte) ([]models.RoleAction, error)
 
 	MayPerform(ctx context.Context, subject, scope, action string) (bool, error)
+	MayPerformIn(ctx context.Context, subject, partition, scope, action string) (bool, error)
 	ActionsFor(ctx context.Context, subject, scope string) ([]string, error)
 	ActionsAnywhere(ctx context.Context, subject string) ([]string, error)
 }
@@ -61,7 +63,12 @@ func NewPermissionsManager(db *gorm.DB, s *spec.Spec) (PermissionsManager, error
 	return &manager{db: db, store: st, spec: s}, nil
 }
 
-func Migrate(db *gorm.DB, s *spec.Spec) error { return spec.Migrate(db, s) }
+func Migrate(db *gorm.DB, s *spec.Spec) error {
+	if err := spec.Migrate(db, s); err != nil {
+		return err
+	}
+	return addPartition(db, s)
+}
 
 func (m *manager) object(role string) spec.Object { return m.store.Object(role) }
 
@@ -72,11 +79,18 @@ func (m *manager) query(ctx context.Context, role string) *gorm.DB {
 }
 
 func (m *manager) MayPerform(ctx context.Context, subject, scope, action string) (bool, error) {
+	return m.MayPerformIn(ctx, subject, "", scope, action)
+}
+
+func (m *manager) MayPerformIn(ctx context.Context, subject, partition, scope, action string) (bool, error) {
 	if subject == "" || scope == "" {
 		return false, nil
 	}
 	if !isAction(action) {
 		return false, ErrInvalidAction
+	}
+	if !isPartition(partition) {
+		return false, ErrInvalidPartition
 	}
 
 	grants := m.table(roleGrant)
@@ -92,6 +106,7 @@ func (m *manager) MayPerform(ctx context.Context, subject, scope, action string)
 			columnName("Code"), columnName("RoleCode"))).
 		Where("g."+columnName("Subject")+" = ?", subject).
 		Where("g."+columnName("Scope")+" in (?, ?)", scope, models.ScopeEverywhere).
+		Where("g."+columnName("Partition")+" in (?, ?)", partition, "").
 		Where("g."+columnName("Deleted")+" = false").
 		Where("r."+columnName("Deleted")+" = false").
 		Where("ra."+columnName("Action")+" = ?", action).
@@ -120,6 +135,7 @@ func (m *manager) ActionsFor(ctx context.Context, subject, scope string) ([]stri
 			columnName("Code"), columnName("RoleCode"))).
 		Where("g."+columnName("Subject")+" = ?", subject).
 		Where("g."+columnName("Scope")+" in (?, ?)", scope, models.ScopeEverywhere).
+		Where("g."+columnName("Partition")+" = ?", "").
 		Where("g."+columnName("Deleted")+" = false").
 		Where("r."+columnName("Deleted")+" = false").
 		Distinct("ra."+columnName("Action")).
