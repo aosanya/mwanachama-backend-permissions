@@ -109,6 +109,26 @@ answers "which tools should this caller be offered", which is a listing
 decision. Enforcement is always the refusal on call. Swapping them would make
 a filtered menu the security boundary, which it is not.
 
+## Acting for somebody else is its own action
+
+A grant to do something for other people is a separate action id, held by a
+separate role, never a widening of the action that does it for oneself. The
+member app's field worker (member app decision 240, PM20) is the first case:
+answering one's own sheet and collecting sheets from people without a phone
+are two declared actions, and only the role that lists the second lets its
+holder submit for anyone else. A grant to answer therefore never carries a
+grant to collect, and withdrawing the collecting grant leaves the holder's
+own answering alone if another role still lists it.
+
+**The words live with the host, not here.** This module stores the pair and
+compares strings, so nothing in it names the action or the role. The action
+is declared in the forms module's operations file, which owns the operation
+it gates (forms F36), and the role that holds it, with its name and its
+seeding, is the host's — wakala-api's (WK169), alongside the other roles it
+seeds. `collect_grant_test.go` holds the shape with neutral names: a
+collecting role reaches the collect action in its granted scope only, an
+answering role never reaches it, and withdrawal stops it.
+
 ## What it does not do
 
 It gates **actions**, not rows. "May read entries, but only pending ones" is
