@@ -186,6 +186,7 @@
     "ErrInvalidScope": 400,
     "ErrInvalidPartition": 400,
     "ErrInvalidGrant": 400,
+    "ErrInvalidEnd": 400,
     "ErrGrantNotFound": 404,
     "ErrDuplicateGrant": 409,
     "ErrSeededRole": 409,

@@ -52,3 +52,21 @@ func rekeyGrants(db *gorm.DB, table string, o spec.Object) error {
 	}
 	return nil
 }
+
+const endsAtColumn = "ends_at"
+
+func addEndsAt(db *gorm.DB, s *spec.Spec) error {
+	o, ok := s.ByRole(roleGrant)
+	if !ok {
+		return nil
+	}
+	table := s.TableFor(o)
+	if db.Migrator().HasColumn(table, endsAtColumn) {
+		return nil
+	}
+	err := db.Exec(fmt.Sprintf("alter table %s add column %s text not null default ''", table, endsAtColumn)).Error
+	if err != nil {
+		return fmt.Errorf("permissions: add ends_at: %w", err)
+	}
+	return nil
+}

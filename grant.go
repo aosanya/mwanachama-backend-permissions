@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -20,6 +21,11 @@ func (m *manager) CreateGrant(ctx context.Context, g models.Grant) (models.Grant
 	if !isPartition(g.Partition) {
 		return models.Grant{}, ErrInvalidPartition
 	}
+	endsAt, err := normalEnd(g.EndsAt)
+	if err != nil {
+		return models.Grant{}, err
+	}
+	g.EndsAt = endsAt
 	if _, err := m.findRole(ctx, g.RoleCode); err != nil {
 		return models.Grant{}, err
 	}
@@ -53,6 +59,7 @@ func (m *manager) reinstate(ctx context.Context, g models.Grant) (models.Grant, 
 			columnName("Deleted"):   false,
 			columnName("GrantedAt"): g.GrantedAt,
 			columnName("GrantedBy"): g.GrantedBy,
+			columnName("EndsAt"):    g.EndsAt,
 		}).Error
 	if err != nil {
 		return models.Grant{}, fmt.Errorf("permissions: reinstate grant: %w", err)
@@ -87,6 +94,7 @@ func (m *manager) findGrant(ctx context.Context, subject, partition, scope, role
 
 func (m *manager) ListGrants(ctx context.Context, f models.GrantFilter) ([]models.Grant, error) {
 	q := m.query(ctx, roleGrant).Where(columnName("Deleted") + " = false")
+	q = q.Where(stillRunning(""), "", endInstant(time.Now()))
 	if f.Subject != "" {
 		q = q.Where(columnName("Subject")+" = ?", f.Subject)
 	}
@@ -136,4 +144,27 @@ func (m *manager) WithdrawGrantIn(ctx context.Context, subject, partition, scope
 		return fmt.Errorf("permissions: withdraw grant: %w", err)
 	}
 	return nil
+}
+
+const endLayout = "2006-01-02T15:04:05.000000000Z"
+
+func normalEnd(raw string) (string, error) {
+	if raw == "" {
+		return "", nil
+	}
+	t, err := time.Parse(time.RFC3339Nano, raw)
+	if err != nil {
+		return "", ErrInvalidEnd
+	}
+	if !t.After(time.Now()) {
+		return "", ErrInvalidEnd
+	}
+	return endInstant(t), nil
+}
+
+func endInstant(t time.Time) string { return t.UTC().Format(endLayout) }
+
+func stillRunning(alias string) string {
+	col := alias + columnName("EndsAt")
+	return "(" + col + " = ? or " + col + " > ?)"
 }

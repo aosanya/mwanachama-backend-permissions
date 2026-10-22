@@ -3,6 +3,7 @@ package mwanachamapermissions
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -67,7 +68,10 @@ func Migrate(db *gorm.DB, s *spec.Spec) error {
 	if err := spec.Migrate(db, s); err != nil {
 		return err
 	}
-	return addPartition(db, s)
+	if err := addPartition(db, s); err != nil {
+		return err
+	}
+	return addEndsAt(db, s)
 }
 
 func (m *manager) object(role string) spec.Object { return m.store.Object(role) }
@@ -108,6 +112,7 @@ func (m *manager) MayPerformIn(ctx context.Context, subject, partition, scope, a
 		Where("g."+columnName("Scope")+" in (?, ?)", scope, models.ScopeEverywhere).
 		Where("g."+columnName("Partition")+" in (?, ?)", partition, "").
 		Where("g."+columnName("Deleted")+" = false").
+		Where(stillRunning("g."), "", endInstant(time.Now())).
 		Where("r."+columnName("Deleted")+" = false").
 		Where("ra."+columnName("Action")+" = ?", action).
 		Count(&n).Error
@@ -137,6 +142,7 @@ func (m *manager) ActionsFor(ctx context.Context, subject, scope string) ([]stri
 		Where("g."+columnName("Scope")+" in (?, ?)", scope, models.ScopeEverywhere).
 		Where("g."+columnName("Partition")+" = ?", "").
 		Where("g."+columnName("Deleted")+" = false").
+		Where(stillRunning("g."), "", endInstant(time.Now())).
 		Where("r."+columnName("Deleted")+" = false").
 		Distinct("ra."+columnName("Action")).
 		Order("ra."+columnName("Action")).
@@ -165,6 +171,7 @@ func (m *manager) ActionsAnywhere(ctx context.Context, subject string) ([]string
 			columnName("Code"), columnName("RoleCode"))).
 		Where("g."+columnName("Subject")+" = ?", subject).
 		Where("g."+columnName("Deleted")+" = false").
+		Where(stillRunning("g."), "", endInstant(time.Now())).
 		Where("r."+columnName("Deleted")+" = false").
 		Distinct("ra."+columnName("Action")).
 		Order("ra."+columnName("Action")).

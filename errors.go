@@ -16,6 +16,8 @@ var ErrInvalidPartition = errors.New("permissions: that is not a well-formed par
 
 var ErrInvalidGrant = errors.New("permissions: a grant needs a subject, a scope and a role")
 
+var ErrInvalidEnd = errors.New("permissions: a grant's end must be an RFC 3339 time still to come")
+
 var ErrGrantNotFound = errors.New("permissions: no such grant")
 
 var ErrDuplicateGrant = errors.New("permissions: that subject already holds that role there")

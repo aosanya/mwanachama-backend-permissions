@@ -7,7 +7,10 @@ type Grant struct {
 	RoleCode  string `json:"role_code"`
 	GrantedBy string `json:"granted_by,omitempty"`
 	GrantedAt string `json:"granted_at"`
+	EndsAt    string `json:"ends_at,omitempty"`
 	Deleted   bool   `json:"deleted"`
 }
 
 const ScopeEverywhere = "*"
+
+const ScopeRecordPrefix = "record:"

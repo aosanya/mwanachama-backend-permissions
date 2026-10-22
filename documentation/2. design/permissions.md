@@ -129,6 +129,42 @@ seeds. `collect_grant_test.go` holds the shape with neutral names: a
 collecting role reaches the collect action in its granted scope only, an
 answering role never reaches it, and withdrawal stops it.
 
+## A grant scoped to one record, with an end (PM22)
+
+The member app's outsiders (decisions 296 and 299 there: a client, a guardian,
+a bidder) see only what is linked to them, and lose it when the record closes
+or staff end it. Two additions carry that, and neither widens anything.
+
+**A record scope.** A scope of the form `record:<module>/<object>/<id>` names
+one record. The module and object segments are lower-case codes, the id is
+`[A-Za-z0-9_.:-]+`, and any scope beginning `record:` that is not exactly that
+shape is refused as `ErrInvalidScope` — no empty segment, no fourth segment, no
+`*`. It is compared exactly like every other scope, so a record grant answers a
+check on that record and nothing else: not a sibling record, not
+`module:<module>`, not a prefix of its own path. Nothing here walks from a
+record up to its module or object; a host that wants both asks twice. The one
+reserved scope `*` still answers everywhere, records included, as it always
+has.
+
+**An end.** `ends_at` is optional RFC 3339 text. `CreateGrant` parses it,
+refuses an unreadable one or one not in the future as `ErrInvalidEnd` (400),
+and stores it in UTC at a fixed nanosecond width so the database compares it as
+text in time order. Empty means the grant never ends. Every read that honours a
+grant — `MayPerform`, `MayPerformIn`, `ActionsFor`, `ActionsAnywhere` and
+`ListGrants` — keeps only `ends_at = '' or ends_at > now`, so past its end a
+grant stops answering and stops listing, exactly as if it had been withdrawn.
+The row itself is kept, like a withdrawn one, so the trail survives.
+Reinstating a withdrawn grant takes the end the new request carries.
+
+Withdrawal is unchanged: `WithdrawGrant` with the record scope ends it at once.
+`Migrate` adds the `ends_at` column to a grant table that predates it, the same
+way it adds `partition`.
+
+Still not here: no wildcard (a record grant never matches by pattern), no deny
+rule (an end subtracts nothing, the grant simply stops adding), and no
+notification — telling the outsider their access ended (decision 299) is the
+host's.
+
 ## What it does not do
 
 It gates **actions**, not rows. "May read entries, but only pending ones" is

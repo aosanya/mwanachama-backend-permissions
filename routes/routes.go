@@ -24,6 +24,7 @@ var sentinels = map[string]error{
 	"ErrInvalidScope":     permissions.ErrInvalidScope,
 	"ErrInvalidPartition": permissions.ErrInvalidPartition,
 	"ErrInvalidGrant":     permissions.ErrInvalidGrant,
+	"ErrInvalidEnd":       permissions.ErrInvalidEnd,
 	"ErrGrantNotFound":    permissions.ErrGrantNotFound,
 	"ErrDuplicateGrant":   permissions.ErrDuplicateGrant,
 	"ErrSeededRole":       permissions.ErrSeededRole,
