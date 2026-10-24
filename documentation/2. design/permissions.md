@@ -204,6 +204,12 @@ The `power` object is keyed by `(partition, power, role_kind, layer)`, and
   the answer carries `layer`, `set_by` and `set_at`, so a screen can say who
   changed a power and when. Neither layer is `ErrPowerNotFound`.
 - `ClearPowerOverride` removes the override, and the definition answers again.
+- `ListPowers` answers every `(power, role_kind)` pair with a row in one
+  partition, ordered by power then role kind, each read exactly as
+  `ReadPower` would: the override when one exists, else the definition, with
+  its `layer`, `set_by` and `set_at`. It is the studio's tick screen in one
+  read. A pair with no row in either layer is not listed, and an empty
+  partition answers an empty list.
 
 `held` is a value per layer, not a deny rule: no grant subtracts from
 another, and an override replaces the definition's answer for exactly one
@@ -211,10 +217,16 @@ key. The `power` role is optional in a domain spec; a spec that fills none
 gets `ErrPowersNotDeclared` from these methods, so an existing deployment's
 spec keeps loading unchanged.
 
-Three of the four have addresses: `GET`, `PUT` and `DELETE` on
+Four of the five have addresses: `GET`, `PUT` and `DELETE` on
 `/powers/{partition}/{power}/{role_kind}`, gated by `permissions.power.read`,
-`permissions.power.override` and `permissions.power.clear`; the `PUT` binds
-`set_by` `from: caller`. `SetPowerDefinition` has no address on purpose: a
+`permissions.power.override` and `permissions.power.clear`, and `GET
+/powers/{partition}` for `ListPowers`, gated by its own
+`permissions.power.list`; the `PUT` binds `set_by` `from: caller`.
+
+An override may untick a power the definition ticks: `held` is stored per
+layer and the override's value answers, true or false. Whether the owner may
+do that is an open question for the owner, not settled here; the code keeps
+that behaviour until it is answered. `SetPowerDefinition` has no address on purpose: a
 publish writes it in process. Not built: any fold of a held power into
 `MayPerformIn`. Who answers
 when no role kind holds a power (owners and agents, decision 342/348) is the

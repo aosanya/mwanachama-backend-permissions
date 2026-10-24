@@ -44,6 +44,7 @@ type PermissionsManager interface {
 	OverridePower(ctx context.Context, p models.Power) (models.Power, error)
 	ClearPowerOverride(ctx context.Context, partition, power, roleKind string) error
 	ReadPower(ctx context.Context, partition, power, roleKind string) (models.Power, error)
+	ListPowers(ctx context.Context, partition string) ([]models.Power, error)
 
 	Seed(ctx context.Context, roleCode, name string, operations ...[]byte) ([]models.RoleAction, error)
 

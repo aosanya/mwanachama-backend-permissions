@@ -62,3 +62,6 @@ func (*stubManager) ClearPowerOverride(context.Context, string, string, string) 
 func (*stubManager) ReadPower(context.Context, string, string, string) (models.Power, error) {
 	panic("unused")
 }
+func (*stubManager) ListPowers(context.Context, string) ([]models.Power, error) {
+	panic("unused")
+}

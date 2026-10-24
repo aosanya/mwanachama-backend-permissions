@@ -82,3 +82,69 @@ func TestAPowerSettingRefusesAMalformedKey(t *testing.T) {
 		t.Fatalf("pattern power: %v", err)
 	}
 }
+
+func TestAPartitionsPowersListWithTheOverrideWinning(t *testing.T) {
+	ctx := context.Background()
+	mgr := newTestManager(t)
+	for _, p := range []models.Power{
+		{Partition: "agy1", Power: "run_poll", RoleKind: "treasurer", Held: true},
+		{Partition: "agy1", Power: "run_poll", RoleKind: "chair", Held: true},
+		{Partition: "agy1", Power: "post_notice", RoleKind: "chair", Held: false},
+		{Partition: "agy2", Power: "run_poll", RoleKind: "chair", Held: true},
+	} {
+		if _, err := mgr.SetPowerDefinition(ctx, p); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := mgr.OverridePower(ctx, models.Power{Partition: "agy1", Power: "run_poll", RoleKind: "treasurer", Held: false, SetBy: "owner-1"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := mgr.OverridePower(ctx, models.Power{Partition: "agy1", Power: "post_event", RoleKind: "secretary", Held: true, SetBy: "owner-1"}); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := mgr.ListPowers(ctx, "agy1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []struct {
+		power, kind string
+		held        bool
+		layer       models.PowerLayer
+		setBy       string
+	}{
+		{"post_event", "secretary", true, models.PowerLayerOverride, "owner-1"},
+		{"post_notice", "chair", false, models.PowerLayerDefinition, ""},
+		{"run_poll", "chair", true, models.PowerLayerDefinition, ""},
+		{"run_poll", "treasurer", false, models.PowerLayerOverride, "owner-1"},
+	}
+	if len(got) != len(want) {
+		t.Fatalf("got %d powers, want %d: %+v", len(got), len(want), got)
+	}
+	for i, w := range want {
+		g := got[i]
+		if g.Partition != "agy1" || g.Power != w.power || g.RoleKind != w.kind || g.Held != w.held || g.Layer != w.layer || g.SetBy != w.setBy || g.SetAt == "" {
+			t.Fatalf("row %d: got %+v, want %+v", i, g, w)
+		}
+	}
+
+	if err := mgr.ClearPowerOverride(ctx, "agy1", "run_poll", "treasurer"); err != nil {
+		t.Fatal(err)
+	}
+	got, _ = mgr.ListPowers(ctx, "agy1")
+	if g := got[3]; g.Layer != models.PowerLayerDefinition || !g.Held {
+		t.Fatalf("after clear: %+v", g)
+	}
+}
+
+func TestAnEmptyPartitionListsNoPowersAndABadOneIsRefused(t *testing.T) {
+	ctx := context.Background()
+	mgr := newTestManager(t)
+	got, err := mgr.ListPowers(ctx, "agy9")
+	if err != nil || got == nil || len(got) != 0 {
+		t.Fatalf("empty partition: %+v %v", got, err)
+	}
+	if _, err := mgr.ListPowers(ctx, ""); !errors.Is(err, permissions.ErrInvalidPartition) {
+		t.Fatalf("no partition: %v", err)
+	}
+}

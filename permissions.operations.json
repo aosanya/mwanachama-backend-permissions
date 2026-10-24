@@ -176,6 +176,18 @@
       ],
       "returns": [{"body": true}]
     },
+    "list_powers": {
+      "method": "GET",
+      "path": "/powers/{partition}",
+      "call": "ListPowers",
+      "action": "permissions.power.list",
+      "title": "List powers",
+      "description": "Every power and role kind with a tick in one partition, each with the layer that answers it, who set it and when: the owner's override when there is one, else the published definition.",
+      "args": [
+        {"from": "path", "as": "partition", "description": "The partition to list."}
+      ],
+      "returns": [{"body": true}]
+    },
     "read_power": {
       "method": "GET",
       "path": "/powers/{partition}/{power}/{role_kind}",

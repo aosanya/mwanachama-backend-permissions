@@ -125,3 +125,39 @@ func (m *manager) powersDeclared() bool {
 	_, ok := m.spec.ByRole(rolePower)
 	return ok
 }
+
+func (m *manager) ListPowers(ctx context.Context, partition string) ([]models.Power, error) {
+	if !m.powersDeclared() {
+		return nil, ErrPowersNotDeclared
+	}
+	if partition == "" || !isPartition(partition) {
+		return nil, ErrInvalidPartition
+	}
+	var rows []map[string]any
+	err := m.query(ctx, rolePower).
+		Where(columnName("Partition")+" = ?", partition).
+		Order(columnName("Power") + ", " + columnName("RoleKind")).
+		Find(&rows).Error
+	if err != nil {
+		return nil, fmt.Errorf("permissions: list powers: %w", err)
+	}
+	out := []models.Power{}
+	at := map[[2]string]int{}
+	for _, row := range rows {
+		var p models.Power
+		if err := decode(m.object(rolePower), row, &p); err != nil {
+			return nil, err
+		}
+		key := [2]string{p.Power, p.RoleKind}
+		i, seen := at[key]
+		if !seen {
+			at[key] = len(out)
+			out = append(out, p)
+			continue
+		}
+		if p.Layer == models.PowerLayerOverride {
+			out[i] = p
+		}
+	}
+	return out, nil
+}
