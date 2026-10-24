@@ -8,7 +8,7 @@
         {
           "name": "code",
           "type": "string",
-          "description": "Stable key for the bundle, such as owner or viewer. Fixed at creation — every grant names it.",
+          "description": "Stable key for the bundle, such as owner or viewer. Fixed at creation \u2014 every grant names it.",
           "primary": true,
           "matches": "code"
         },
@@ -74,7 +74,10 @@
         {
           "name": "role_action",
           "description": "The permission check: does this bundle permit this action.",
-          "fields": ["role_code", "action"]
+          "fields": [
+            "role_code",
+            "action"
+          ]
         }
       ]
     },
@@ -133,8 +136,62 @@
         {
           "name": "subject_scope",
           "description": "The permission check's first half: every live bundle this subject holds here.",
-          "fields": ["subject", "scope"],
+          "fields": [
+            "subject",
+            "scope"
+          ],
           "not_deleted": true
+        }
+      ]
+    },
+    {
+      "role": "power",
+      "description": "Whether one role kind holds one power in one partition, as one layer set it. Two layers exist: the published definition's and the owner's override; an override row, when present, is the answer. A power is an opaque code naming a list of actions elsewhere; this module never learns what it allows.",
+      "fields": [
+        {
+          "name": "partition",
+          "type": "string",
+          "description": "The partition the setting holds in, as an opaque key the caller chooses.",
+          "primary": true
+        },
+        {
+          "name": "power",
+          "type": "string",
+          "description": "The power's code, compared exactly and never interpreted.",
+          "primary": true,
+          "matches": "code"
+        },
+        {
+          "name": "role_kind",
+          "type": "string",
+          "description": "The kind of role the setting is for, as an opaque key the caller chooses.",
+          "primary": true,
+          "matches": "code"
+        },
+        {
+          "name": "layer",
+          "type": "enum",
+          "values": [
+            "definition",
+            "override"
+          ],
+          "description": "Which layer set it: the published definition or the owner's override.",
+          "primary": true
+        },
+        {
+          "name": "held",
+          "type": "bool",
+          "description": "Whether that layer ticks the power for that role kind."
+        },
+        {
+          "name": "set_by",
+          "type": "string",
+          "description": "The subject that set it, from the caller. Empty when a publish or bootstrap set it."
+        },
+        {
+          "name": "set_at",
+          "type": "timestamp",
+          "description": "When it was last set."
         }
       ]
     }

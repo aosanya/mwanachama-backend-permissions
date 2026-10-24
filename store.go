@@ -11,6 +11,7 @@ const (
 	roleRole       = "role"
 	roleRoleAction = "role_action"
 	roleGrant      = "grant"
+	rolePower      = "power"
 )
 
 type store = specstore.Store

@@ -25,3 +25,9 @@ var ErrDuplicateGrant = errors.New("permissions: that subject already holds that
 var ErrNotPermitted = errors.New("permissions: the caller may not perform that action")
 
 var ErrSeededRole = errors.New("permissions: a seeded role's actions are owned by the seeding pass")
+
+var ErrInvalidPower = errors.New("permissions: a power setting needs a partition, a power code, a role kind and, for an override, who set it")
+
+var ErrPowerNotFound = errors.New("permissions: no layer sets that power for that role kind")
+
+var ErrPowersNotDeclared = errors.New("permissions: this domain declares no power object")

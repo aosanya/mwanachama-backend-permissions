@@ -184,3 +184,34 @@ module that owns the rows, the way catalog's `visibility` already works.
 It does not decide who may grant. Granting is itself an action
 (`permissions.grant.create`), so the module gates itself, and what seeds the
 very first grant is a bootstrap problem for whoever mounts it.
+
+## Powers per role kind, in two layers (PM21)
+
+A **power** is a code a host names, such as the ones agency's AG88 catalog
+lists (`run_poll`, `post_notice`, `post_event`, `post_volunteer_call`); the
+actions a power allows are that catalog's to say. This module stores only
+whether a **role kind** holds a power in one **partition** (an agency), and
+which layer said so. It never learns the power's name or its actions.
+
+The `power` object is keyed by `(partition, power, role_kind, layer)`, and
+`layer` is `definition` or `override`:
+
+- `SetPowerDefinition` writes the published definition's tick. A publish
+  rewrites it and never touches an override, and `set_by` is always empty.
+- `OverridePower` writes the owner's tick, with `set_by` required. It is the
+  caller's to fill from the session, never from a request body.
+- `ReadPower` answers the override when one exists, else the definition, and
+  the answer carries `layer`, `set_by` and `set_at`, so a screen can say who
+  changed a power and when. Neither layer is `ErrPowerNotFound`.
+- `ClearPowerOverride` removes the override, and the definition answers again.
+
+`held` is a value per layer, not a deny rule: no grant subtracts from
+another, and an override replaces the definition's answer for exactly one
+key. The `power` role is optional in a domain spec; a spec that fills none
+gets `ErrPowersNotDeclared` from these methods, so an existing deployment's
+spec keeps loading unchanged.
+
+Not built in this slice: addresses in `permissions.operations.json` for the
+four methods, and any fold of a held power into `MayPerformIn`. Who answers
+when no role kind holds a power (owners and agents, decision 342/348) is the
+host's rule over `ReadPower`, not stored here.

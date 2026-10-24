@@ -20,6 +20,12 @@
       "name": "grant",
       "table": "grants",
       "description": "One person or routine holding a bundle over one agency instance."
+    },
+    {
+      "role": "power",
+      "name": "power",
+      "table": "powers",
+      "description": "Which seats of an agency hold which named power, as published and as its owner overrode it."
     }
   ]
 }

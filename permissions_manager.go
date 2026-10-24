@@ -17,6 +17,7 @@ type (
 	Grant       = models.Grant
 	RoleFilter  = models.RoleFilter
 	GrantFilter = models.GrantFilter
+	Power       = models.Power
 )
 
 const ScopeEverywhere = models.ScopeEverywhere
@@ -39,6 +40,11 @@ type PermissionsManager interface {
 	WithdrawGrant(ctx context.Context, subject, scope, roleCode string) error
 	WithdrawGrantIn(ctx context.Context, subject, partition, scope, roleCode string) error
 
+	SetPowerDefinition(ctx context.Context, p models.Power) (models.Power, error)
+	OverridePower(ctx context.Context, p models.Power) (models.Power, error)
+	ClearPowerOverride(ctx context.Context, partition, power, roleKind string) error
+	ReadPower(ctx context.Context, partition, power, roleKind string) (models.Power, error)
+
 	Seed(ctx context.Context, roleCode, name string, operations ...[]byte) ([]models.RoleAction, error)
 
 	MayPerform(ctx context.Context, subject, scope, action string) (bool, error)
@@ -54,11 +60,15 @@ type manager struct {
 }
 
 func NewPermissionsManager(db *gorm.DB, s *spec.Spec) (PermissionsManager, error) {
-	st, err := newStore(db, s, map[string]any{
+	carriers := map[string]any{
 		roleRole:       models.Role{},
 		roleRoleAction: models.RoleAction{},
 		roleGrant:      models.Grant{},
-	})
+	}
+	if _, ok := s.ByRole(rolePower); ok {
+		carriers[rolePower] = models.Power{}
+	}
+	st, err := newStore(db, s, carriers)
 	if err != nil {
 		return nil, err
 	}

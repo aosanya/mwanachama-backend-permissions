@@ -50,3 +50,15 @@ func (*stubManager) ActionsAnywhere(context.Context, string) ([]string, error)  
 func (*stubManager) SeedActions(context.Context, string, []string) ([]models.RoleAction, error) {
 	panic("unused")
 }
+func (*stubManager) SetPowerDefinition(context.Context, models.Power) (models.Power, error) {
+	panic("unused")
+}
+func (*stubManager) OverridePower(context.Context, models.Power) (models.Power, error) {
+	panic("unused")
+}
+func (*stubManager) ClearPowerOverride(context.Context, string, string, string) error {
+	panic("unused")
+}
+func (*stubManager) ReadPower(context.Context, string, string, string) (models.Power, error) {
+	panic("unused")
+}
