@@ -14,8 +14,8 @@ func TestDeclaredActions_ReadsEveryActionAndDeduplicates(t *testing.T) {
 	if err != nil {
 		t.Fatalf("DeclaredActions: %v", err)
 	}
-	if len(got) != 14 {
-		t.Fatalf("got %d actions, want this module's 14 declared once: %v", len(got), got)
+	if len(got) != 17 {
+		t.Fatalf("got %d actions, want this module's 17 declared once: %v", len(got), got)
 	}
 	for i := 1; i < len(got); i++ {
 		if got[i-1] >= got[i] {
@@ -58,8 +58,8 @@ func TestSeed_CreatesTheRoleAndOwnsItsActions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Seed: %v", err)
 	}
-	if len(written) != 14 {
-		t.Fatalf("seeded %d actions, want 14", len(written))
+	if len(written) != 17 {
+		t.Fatalf("seeded %d actions, want 17", len(written))
 	}
 
 	role, err := mgr.GetRole(ctx, "owner")

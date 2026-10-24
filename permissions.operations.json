@@ -175,6 +175,52 @@
         {"from": "path", "as": "role_code", "description": "The bundle to withdraw."}
       ],
       "returns": [{"body": true}]
+    },
+    "read_power": {
+      "method": "GET",
+      "path": "/powers/{partition}/{power}/{role_kind}",
+      "call": "ReadPower",
+      "action": "permissions.power.read",
+      "title": "Read a power",
+      "description": "Whether one role kind holds one power in one partition, and which layer said so: the owner's override when there is one, else the published definition.",
+      "args": [
+        {"from": "path", "as": "partition", "description": "The partition to ask in."},
+        {"from": "path", "as": "power", "description": "The power's code."},
+        {"from": "path", "as": "role_kind", "description": "The role kind to ask about."}
+      ],
+      "returns": [{"body": true}]
+    },
+    "override_power": {
+      "method": "PUT",
+      "path": "/powers/{partition}/{power}/{role_kind}",
+      "call": "OverridePower",
+      "action": "permissions.power.override",
+      "title": "Override a power",
+      "description": "Tick or untick one power for one role kind, over whatever the published definition says. Who set it comes from the caller.",
+      "args": [
+        {"from": "body", "whole": true},
+        {"from": "path", "as": "partition", "into": "Partition", "description": "The partition to set it in."},
+        {"from": "path", "as": "power", "into": "Power", "description": "The power's code."},
+        {"from": "path", "as": "role_kind", "into": "RoleKind", "description": "The role kind to set it for."},
+        {"from": "caller", "as": "set_by", "into": "SetBy",
+         "description": "The subject that set it, supplied by the mount. Never read from the request."}
+      ],
+      "returns": [{"body": true}]
+    },
+    "clear_power_override": {
+      "method": "DELETE",
+      "path": "/powers/{partition}/{power}/{role_kind}",
+      "call": "ClearPowerOverride",
+      "status": 204,
+      "action": "permissions.power.clear",
+      "title": "Clear a power override",
+      "description": "Remove the owner's override, so the published definition answers again.",
+      "args": [
+        {"from": "path", "as": "partition", "description": "The partition to clear it in."},
+        {"from": "path", "as": "power", "description": "The power's code."},
+        {"from": "path", "as": "role_kind", "description": "The role kind to clear it for."}
+      ],
+      "returns": [{"body": true}]
     }
   },
 
@@ -190,6 +236,9 @@
     "ErrGrantNotFound": 404,
     "ErrDuplicateGrant": 409,
     "ErrSeededRole": 409,
-    "ErrNotPermitted": 403
+    "ErrNotPermitted": 403,
+    "ErrInvalidPower": 400,
+    "ErrPowerNotFound": 404,
+    "ErrPowersNotDeclared": 404
   }
 }

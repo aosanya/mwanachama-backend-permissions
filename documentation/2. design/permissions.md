@@ -211,7 +211,11 @@ key. The `power` role is optional in a domain spec; a spec that fills none
 gets `ErrPowersNotDeclared` from these methods, so an existing deployment's
 spec keeps loading unchanged.
 
-Not built in this slice: addresses in `permissions.operations.json` for the
-four methods, and any fold of a held power into `MayPerformIn`. Who answers
+Three of the four have addresses: `GET`, `PUT` and `DELETE` on
+`/powers/{partition}/{power}/{role_kind}`, gated by `permissions.power.read`,
+`permissions.power.override` and `permissions.power.clear`; the `PUT` binds
+`set_by` `from: caller`. `SetPowerDefinition` has no address on purpose: a
+publish writes it in process. Not built: any fold of a held power into
+`MayPerformIn`. Who answers
 when no role kind holds a power (owners and agents, decision 342/348) is the
 host's rule over `ReadPower`, not stored here.

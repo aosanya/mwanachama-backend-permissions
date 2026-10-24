@@ -17,18 +17,21 @@ var operations = sync.OnceValues(func() (*dispatch.Spec, error) {
 })
 
 var sentinels = map[string]error{
-	"ErrInvalidRole":      permissions.ErrInvalidRole,
-	"ErrRoleNotFound":     permissions.ErrRoleNotFound,
-	"ErrDuplicateRole":    permissions.ErrDuplicateRole,
-	"ErrInvalidAction":    permissions.ErrInvalidAction,
-	"ErrInvalidScope":     permissions.ErrInvalidScope,
-	"ErrInvalidPartition": permissions.ErrInvalidPartition,
-	"ErrInvalidGrant":     permissions.ErrInvalidGrant,
-	"ErrInvalidEnd":       permissions.ErrInvalidEnd,
-	"ErrGrantNotFound":    permissions.ErrGrantNotFound,
-	"ErrDuplicateGrant":   permissions.ErrDuplicateGrant,
-	"ErrSeededRole":       permissions.ErrSeededRole,
-	"ErrNotPermitted":     permissions.ErrNotPermitted,
+	"ErrInvalidRole":       permissions.ErrInvalidRole,
+	"ErrRoleNotFound":      permissions.ErrRoleNotFound,
+	"ErrDuplicateRole":     permissions.ErrDuplicateRole,
+	"ErrInvalidAction":     permissions.ErrInvalidAction,
+	"ErrInvalidScope":      permissions.ErrInvalidScope,
+	"ErrInvalidPartition":  permissions.ErrInvalidPartition,
+	"ErrInvalidGrant":      permissions.ErrInvalidGrant,
+	"ErrInvalidEnd":        permissions.ErrInvalidEnd,
+	"ErrGrantNotFound":     permissions.ErrGrantNotFound,
+	"ErrDuplicateGrant":    permissions.ErrDuplicateGrant,
+	"ErrSeededRole":        permissions.ErrSeededRole,
+	"ErrInvalidPower":      permissions.ErrInvalidPower,
+	"ErrPowerNotFound":     permissions.ErrPowerNotFound,
+	"ErrPowersNotDeclared": permissions.ErrPowersNotDeclared,
+	"ErrNotPermitted":      permissions.ErrNotPermitted,
 }
 
 var AnonymousActions []string
