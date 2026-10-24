@@ -148,3 +148,30 @@ func TestAnEmptyPartitionListsNoPowersAndABadOneIsRefused(t *testing.T) {
 		t.Fatalf("no partition: %v", err)
 	}
 }
+
+func TestAHeldPowerGrantsNoActionThroughTheGate(t *testing.T) {
+	ctx := context.Background()
+	mgr := newTestManager(t)
+	if _, err := mgr.CreateRole(ctx, models.Role{Code: "secretary", Name: "Secretary"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := mgr.CreateGrant(ctx, models.Grant{Subject: "ann", Scope: "module:engage", Partition: "agy1", RoleCode: "secretary"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := mgr.SetPowerDefinition(ctx, models.Power{Partition: "agy1", Power: "post_notice", RoleKind: "secretary", Held: true}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := mgr.OverridePower(ctx, models.Power{Partition: "agy1", Power: "post_event", RoleKind: "secretary", Held: true, SetBy: "owner-1"}); err != nil {
+		t.Fatal(err)
+	}
+	for _, action := range []string{"engage.notice.post", "engage.event.post"} {
+		ok, err := mgr.MayPerformIn(ctx, "ann", "agy1", "module:engage", action)
+		if err != nil || ok {
+			t.Fatalf("MayPerformIn(%s) = %v, %v; a held power must not reach the gate", action, ok, err)
+		}
+	}
+	actions, err := mgr.ActionsFor(ctx, "ann", "module:engage")
+	if err != nil || len(actions) != 0 {
+		t.Fatalf("ActionsFor = %v, %v; want none from a held power", actions, err)
+	}
+}

@@ -227,7 +227,14 @@ An override may untick a power the definition ticks: `held` is stored per
 layer and the override's value answers, true or false. Whether the owner may
 do that is an open question for the owner, not settled here; the code keeps
 that behaviour until it is answered. `SetPowerDefinition` has no address on purpose: a
-publish writes it in process. Not built: any fold of a held power into
-`MayPerformIn`. Who answers
+publish writes it in process.
+
+**A held power is not folded into the gate; that is the host's.** The
+actions a power allows are AG88's catalog to say, and this module never
+learns them, so `MayPerformIn`, `MayPerform`, `ActionsFor` and
+`ActionsAnywhere` read grants and role actions only. A power row grants no
+action, even when its role kind is a role the subject is granted; `TestAHeldPowerGrantsNoActionThroughTheGate`
+pins it. A host that gates a power's actions asks `ReadPower` for the
+caller's role kinds and maps the power to its actions itself. Who answers
 when no role kind holds a power (owners and agents, decision 342/348) is the
 host's rule over `ReadPower`, not stored here.
