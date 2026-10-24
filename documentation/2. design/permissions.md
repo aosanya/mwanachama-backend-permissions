@@ -93,6 +93,8 @@ actions, so the list is recomputed rather than maintained. A role written
 that way is marked `seeded`, and `AddAction`/`RemoveAction` then refuse it —
 a hand edit would be silently undone by the next pass, which is worse than
 being told no.
+`seeded` is server-owned: `CreateRole` always writes it false whatever the
+request body says (PM6), so a hand-made role cannot arrive already locked.
 
 **Retiring a role stops every grant naming it, and the grants stay.**
 `MayPerform` joins through the role and checks `deleted` on both sides. The

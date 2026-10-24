@@ -21,7 +21,7 @@ func (m *manager) CreateRole(ctx context.Context, r models.Role) (models.Role, e
 	}
 
 	now := models.NowRFC3339()
-	r.CreatedAt, r.UpdatedAt, r.Deleted = now, now, false
+	r.CreatedAt, r.UpdatedAt, r.Deleted, r.Seeded = now, now, false, false
 
 	row, err := encode(m.object(roleRole), r)
 	if err != nil {

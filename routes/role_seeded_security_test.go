@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestPM6_OpenHole_CreateRoleTakesSeededFromTheRequestBody(t *testing.T) {
+func TestPM6_CreateRoleIgnoresSeededInTheRequestBody(t *testing.T) {
 	mux := mountPermissions(t)
 	rec := send(t, mux, "POST", "/permissions/roles", `{"code":"writer","name":"Writer","seeded":true}`)
 	if rec.Code != http.StatusCreated {
