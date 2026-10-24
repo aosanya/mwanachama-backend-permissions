@@ -263,13 +263,13 @@ func TestCreateGrant_ReinstatesRatherThanDuplicating(t *testing.T) {
 	}
 }
 
-func TestSetActions_ReplacesTheWholeListAndMarksTheRoleSeeded(t *testing.T) {
+func TestSeedActions_ReplacesTheWholeListAndMarksTheRoleSeeded(t *testing.T) {
 	mgr := newTestManager(t)
 	ctx := context.Background()
 	seedViewer(t, mgr, ctx)
 
-	if _, err := mgr.SetActions(ctx, "viewer", []string{"agency.publication.list", "agency.module.list"}); err != nil {
-		t.Fatalf("SetActions: %v", err)
+	if _, err := mgr.SeedActions(ctx, "viewer", []string{"agency.publication.list", "agency.module.list"}); err != nil {
+		t.Fatalf("SeedActions: %v", err)
 	}
 	actions, err := mgr.ListActions(ctx, "viewer")
 	if err != nil {

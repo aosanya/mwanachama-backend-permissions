@@ -129,7 +129,7 @@
       "call": "SetActions",
       "action": "permissions.role_action.replace",
       "title": "Replace a role's actions",
-      "description": "Replace a bundle's whole list in one write, and mark it as owned by a seeding pass. This is how a deployment says which actions the mounted modules declare now, so the list is recomputed rather than maintained by hand.",
+      "description": "Replace a bundle's whole list in one write. It never marks the bundle as owned by a seeding pass; only the host's own seeding call does that.",
       "args": [
         {"from": "path", "as": "role_code", "description": "The bundle to replace."},
         {"from": "body", "as": "actions", "required": true, "description": "The whole list, replacing whatever was there."}

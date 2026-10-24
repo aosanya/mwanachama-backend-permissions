@@ -1,17 +1,49 @@
 package routes_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/glebarez/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+
+	permissions "github.com/aosanya/mwanachama-backend-permissions"
+	"github.com/aosanya/mwanachama-backend-permissions/routes"
 )
 
+func mountPermissionsWithManager(t *testing.T) (*http.ServeMux, permissions.PermissionsManager) {
+	t.Helper()
+	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
+	if err != nil {
+		t.Fatalf("open: %v", err)
+	}
+	s, err := permissions.LoadSpec("../spec/examples/wakala.permissions.json")
+	if err != nil {
+		t.Fatalf("LoadSpec: %v", err)
+	}
+	if err := permissions.Migrate(db, s); err != nil {
+		t.Fatalf("Migrate: %v", err)
+	}
+	pm, err := permissions.NewPermissionsManager(db, s)
+	if err != nil {
+		t.Fatalf("NewPermissionsManager: %v", err)
+	}
+	mux := http.NewServeMux()
+	for _, rt := range routes.Routes(pm) {
+		mux.HandleFunc(rt.Pattern("/permissions"), rt.Handler)
+	}
+	return mux, pm
+}
+
 func TestRenameRole_ABodySeededFalseDoesNotUnsealASeededRole(t *testing.T) {
-	mux := mountPermissions(t)
+	mux, pm := mountPermissionsWithManager(t)
 	send(t, mux, "POST", "/permissions/roles", `{"code":"sealed","name":"Sealed"}`)
-	if rec := send(t, mux, "PUT", "/permissions/roles/sealed/actions", `{"actions":["catalog.entry.list"]}`); rec.Code != http.StatusOK {
-		t.Fatalf("precondition: set actions answered %d %s, want 200", rec.Code, rec.Body.String())
+	if _, err := pm.SeedActions(context.Background(), "sealed", []string{"catalog.entry.list"}); err != nil {
+		t.Fatalf("precondition: seed actions: %v", err)
 	}
 	seeded := func() bool {
 		t.Helper()

@@ -43,5 +43,5 @@ func (m *manager) Seed(ctx context.Context, roleCode, name string, operations ..
 			return nil, err
 		}
 	}
-	return m.SetActions(ctx, roleCode, actions)
+	return m.SeedActions(ctx, roleCode, actions)
 }

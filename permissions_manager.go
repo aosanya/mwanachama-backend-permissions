@@ -32,6 +32,7 @@ type PermissionsManager interface {
 	RemoveAction(ctx context.Context, roleCode, action string) error
 	ListActions(ctx context.Context, roleCode string) ([]models.RoleAction, error)
 	SetActions(ctx context.Context, roleCode string, actions []string) ([]models.RoleAction, error)
+	SeedActions(ctx context.Context, roleCode string, actions []string) ([]models.RoleAction, error)
 
 	CreateGrant(ctx context.Context, g models.Grant) (models.Grant, error)
 	ListGrants(ctx context.Context, f models.GrantFilter) ([]models.Grant, error)

@@ -87,14 +87,22 @@ to a smaller role.
 **Actions are listed one by one, never matched by pattern.** No
 `catalog.*.list`. A pattern is one row instead of twelve and it widens itself
 the moment a module declares a matching operation — which is the failure this
-module exists to prevent. `SetActions` is what makes that affordable: a
+module exists to prevent. `SeedActions` is what makes that affordable: a
 seeding pass replaces a role's whole list from the mounted modules' declared
 actions, so the list is recomputed rather than maintained. A role written
 that way is marked `seeded`, and `AddAction`/`RemoveAction` then refuse it —
 a hand edit would be silently undone by the next pass, which is worse than
 being told no.
-`seeded` is server-owned: `CreateRole` always writes it false whatever the
-request body says (PM6), so a hand-made role cannot arrive already locked.
+`seeded` is server-owned, and only the host's own seeding pass sets it
+(PM6, decision 444). `CreateRole` always writes it false whatever the
+request body says, so a hand-made role cannot arrive already locked.
+`SeedActions` (and `Seed`, which calls it) is a Go method only: it is not a
+declared operation, so no route and no MCP tool reaches it. The declared
+`set_actions` operation (`PUT /roles/{role_code}/actions`) calls
+`SetActions`, which replaces the list the same way but never marks the role
+seeded — otherwise any caller allowed to replace a list could lock a
+hand-made role against `AddAction`/`RemoveAction`. It does not refuse an
+already-seeded role either; replacing that list leaves the mark as it was.
 
 **Retiring a role stops every grant naming it, and the grants stay.**
 `MayPerform` joins through the role and checks `deleted` on both sides. The

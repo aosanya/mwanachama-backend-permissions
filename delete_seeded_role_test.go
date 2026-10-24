@@ -14,8 +14,8 @@ func TestPM18_OpenBug_DeleteRoleDestroysASeededRoleForever(t *testing.T) {
 	if _, err := mgr.CreateRole(ctx, permissions.Role{Code: "writer", Name: "Writer"}); err != nil {
 		t.Fatalf("precondition: CreateRole: %v", err)
 	}
-	if _, err := mgr.SetActions(ctx, "writer", []string{"catalog.entry.upsert"}); err != nil {
-		t.Fatalf("precondition: SetActions: %v", err)
+	if _, err := mgr.SeedActions(ctx, "writer", []string{"catalog.entry.upsert"}); err != nil {
+		t.Fatalf("precondition: SeedActions: %v", err)
 	}
 	role, err := mgr.GetRole(ctx, "writer")
 	if err != nil {

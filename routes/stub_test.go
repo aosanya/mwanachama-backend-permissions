@@ -46,3 +46,7 @@ func (*stubManager) MayPerformIn(context.Context, string, string, string, string
 }
 func (*stubManager) ActionsFor(context.Context, string, string) ([]string, error) { panic("unused") }
 func (*stubManager) ActionsAnywhere(context.Context, string) ([]string, error)    { panic("unused") }
+
+func (*stubManager) SeedActions(context.Context, string, []string) ([]models.RoleAction, error) {
+	panic("unused")
+}

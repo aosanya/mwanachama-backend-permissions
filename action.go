@@ -92,6 +92,14 @@ func (m *manager) ListActions(ctx context.Context, roleCode string) ([]models.Ro
 }
 
 func (m *manager) SetActions(ctx context.Context, roleCode string, actions []string) ([]models.RoleAction, error) {
+	return m.replaceActions(ctx, roleCode, actions, false)
+}
+
+func (m *manager) SeedActions(ctx context.Context, roleCode string, actions []string) ([]models.RoleAction, error) {
+	return m.replaceActions(ctx, roleCode, actions, true)
+}
+
+func (m *manager) replaceActions(ctx context.Context, roleCode string, actions []string, seeding bool) ([]models.RoleAction, error) {
 	if _, err := m.findRole(ctx, roleCode); err != nil {
 		return nil, err
 	}
@@ -122,12 +130,13 @@ func (m *manager) SetActions(ctx context.Context, roleCode string, actions []str
 			}
 			out = append(out, ra)
 		}
+		changed := map[string]any{columnName("UpdatedAt"): now}
+		if seeding {
+			changed[columnName("Seeded")] = true
+		}
 		return tx.Table(m.table(roleRole)).
 			Where(columnName("Code")+" = ?", roleCode).
-			Updates(map[string]any{
-				columnName("Seeded"):    true,
-				columnName("UpdatedAt"): now,
-			}).Error
+			Updates(changed).Error
 	})
 	if err != nil {
 		return nil, err
