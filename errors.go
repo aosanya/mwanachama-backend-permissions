@@ -31,3 +31,9 @@ var ErrInvalidPower = errors.New("permissions: a power setting needs a partition
 var ErrPowerNotFound = errors.New("permissions: no layer sets that power for that role kind")
 
 var ErrPowersNotDeclared = errors.New("permissions: this domain declares no power object")
+
+var ErrConflict = errors.New("permissions: another write got there first, try again")
+
+var ErrActionsRequired = errors.New("permissions: replacing a role's actions needs the whole list, an empty one to clear it")
+
+var ErrRoleRetired = errors.New("permissions: that role has been retired")
