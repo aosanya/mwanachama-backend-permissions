@@ -26,7 +26,7 @@ func (m *manager) CreateGrant(ctx context.Context, g models.Grant) (models.Grant
 		return models.Grant{}, err
 	}
 	g.EndsAt = endsAt
-	if _, err := m.findRole(ctx, g.RoleCode); err != nil {
+	if _, err := m.findLiveRole(ctx, g.RoleCode); err != nil {
 		return models.Grant{}, err
 	}
 
@@ -46,9 +46,23 @@ func (m *manager) CreateGrant(ctx context.Context, g models.Grant) (models.Grant
 		return models.Grant{}, err
 	}
 	if err := m.query(ctx, roleGrant).Create(row).Error; err != nil {
-		return models.Grant{}, fmt.Errorf("permissions: create grant: %w", err)
+		if isUniqueViolation(err) {
+			return m.grantThatWonTheRace(ctx, g)
+		}
+		return models.Grant{}, fmt.Errorf("permissions: create grant: %w", classifyConflict(err))
 	}
 	return g, nil
+}
+
+func (m *manager) grantThatWonTheRace(ctx context.Context, g models.Grant) (models.Grant, error) {
+	won, err := m.findGrant(ctx, g.Subject, g.Partition, g.Scope, g.RoleCode)
+	if err != nil {
+		return models.Grant{}, err
+	}
+	if won.Deleted {
+		return m.reinstate(ctx, g)
+	}
+	return won, nil
 }
 
 func (m *manager) reinstate(ctx context.Context, g models.Grant) (models.Grant, error) {
@@ -110,7 +124,7 @@ func (m *manager) ListGrants(ctx context.Context, f models.GrantFilter) ([]model
 
 	var rows []map[string]any
 	err := q.Order(columnName("Subject") + ", " + columnName("Scope") + ", " + columnName("RoleCode")).
-		Find(&rows).Error
+		Limit(listCap).Find(&rows).Error
 	if err != nil {
 		return nil, fmt.Errorf("permissions: list grants: %w", err)
 	}

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestPM17_OpenBug_ListGrantsRoleFilterAnswersToRolecodeNotRoleCode(t *testing.T) {
+func TestPM17_ListGrantsRoleFilterAnswersToRoleCode(t *testing.T) {
 	mux := mountPermissions(t)
 	send(t, mux, "POST", "/permissions/roles", `{"code":"writer","name":"Writer"}`)
 	send(t, mux, "POST", "/permissions/roles", `{"code":"reader","name":"Reader"}`)

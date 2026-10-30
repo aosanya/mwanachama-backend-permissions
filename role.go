@@ -28,9 +28,23 @@ func (m *manager) CreateRole(ctx context.Context, r models.Role) (models.Role, e
 		return models.Role{}, err
 	}
 	if err := m.query(ctx, roleRole).Create(row).Error; err != nil {
-		return models.Role{}, fmt.Errorf("permissions: create role: %w", err)
+		if isUniqueViolation(err) {
+			return m.findRole(ctx, r.Code)
+		}
+		return models.Role{}, fmt.Errorf("permissions: create role: %w", classifyConflict(err))
 	}
 	return r, nil
+}
+
+func (m *manager) findLiveRole(ctx context.Context, code string) (models.Role, error) {
+	role, err := m.findRole(ctx, code)
+	if err != nil {
+		return models.Role{}, err
+	}
+	if role.Deleted {
+		return models.Role{}, ErrRoleRetired
+	}
+	return role, nil
 }
 
 func (m *manager) GetRole(ctx context.Context, code string) (models.Role, error) {
@@ -61,14 +75,15 @@ func (m *manager) ListRoles(ctx context.Context, f models.RoleFilter) ([]models.
 		q = q.Where(columnName("Code")+" = ?", f.Code)
 	}
 	if f.Name != "" {
-		q = q.Where("lower("+columnName("Name")+") like ?", "%"+lower(f.Name)+"%")
+		q = q.Where(containsClause(columnName("Name")), containsPattern(f.Name))
 	}
 	if f.Seeded != nil {
 		q = q.Where(columnName("Seeded")+" = ?", *f.Seeded)
 	}
 
 	var rows []map[string]any
-	if err := q.Order(columnName("Code")).Find(&rows).Error; err != nil {
+	if err := q.Order(columnName("CreatedAt") + " desc, " + columnName("Code") + " desc").
+		Limit(listCap).Find(&rows).Error; err != nil {
 		return nil, fmt.Errorf("permissions: list roles: %w", err)
 	}
 	out := make([]models.Role, 0, len(rows))
@@ -108,10 +123,14 @@ func (m *manager) UpdateRole(ctx context.Context, r models.Role) (models.Role, e
 }
 
 func (m *manager) DeleteRole(ctx context.Context, code string) error {
-	if _, err := m.findRole(ctx, code); err != nil {
+	role, err := m.findRole(ctx, code)
+	if err != nil {
 		return err
 	}
-	err := m.query(ctx, roleRole).
+	if role.Seeded {
+		return ErrSeededRole
+	}
+	err = m.query(ctx, roleRole).
 		Where(columnName("Code")+" = ?", code).
 		Updates(map[string]any{
 			columnName("Deleted"):   true,

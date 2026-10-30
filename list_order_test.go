@@ -7,7 +7,7 @@ import (
 	"github.com/aosanya/mwanachama-backend-permissions/models"
 )
 
-func TestPM15_OpenBug_ListRolesIgnoresDeclaredNewestFirstOrder(t *testing.T) {
+func TestPM15_ListRolesAnswersNewestFirst(t *testing.T) {
 	mgr := newTestManager(t)
 	ctx := context.Background()
 

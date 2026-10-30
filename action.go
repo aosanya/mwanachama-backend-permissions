@@ -13,7 +13,7 @@ import (
 func lower(s string) string { return strings.ToLower(s) }
 
 func (m *manager) AddAction(ctx context.Context, roleCode, action string) (models.RoleAction, error) {
-	role, err := m.findRole(ctx, roleCode)
+	role, err := m.findLiveRole(ctx, roleCode)
 	if err != nil {
 		return models.RoleAction{}, err
 	}
@@ -49,7 +49,10 @@ func (m *manager) writeAction(ctx context.Context, db *gorm.DB, ra models.RoleAc
 		return nil
 	}
 	if err := db.WithContext(ctx).Table(m.table(roleRoleAction)).Create(row).Error; err != nil {
-		return fmt.Errorf("permissions: add action: %w", err)
+		if isUniqueViolation(err) {
+			return nil
+		}
+		return fmt.Errorf("permissions: add action: %w", classifyConflict(err))
 	}
 	return nil
 }
@@ -76,7 +79,7 @@ func (m *manager) ListActions(ctx context.Context, roleCode string) ([]models.Ro
 	err := m.query(ctx, roleRoleAction).
 		Where(columnName("RoleCode")+" = ?", roleCode).
 		Order(columnName("Action")).
-		Find(&rows).Error
+		Limit(listCap).Find(&rows).Error
 	if err != nil {
 		return nil, fmt.Errorf("permissions: list actions: %w", err)
 	}
@@ -92,6 +95,9 @@ func (m *manager) ListActions(ctx context.Context, roleCode string) ([]models.Ro
 }
 
 func (m *manager) SetActions(ctx context.Context, roleCode string, actions []string) ([]models.RoleAction, error) {
+	if actions == nil {
+		return nil, ErrActionsRequired
+	}
 	return m.replaceActions(ctx, roleCode, actions, false)
 }
 
@@ -109,6 +115,7 @@ func (m *manager) replaceActions(ctx context.Context, roleCode string, actions [
 		}
 	}
 
+	actions = distinct(actions)
 	now := models.NowRFC3339()
 	out := make([]models.RoleAction, 0, len(actions))
 
@@ -126,7 +133,7 @@ func (m *manager) replaceActions(ctx context.Context, roleCode string, actions [
 				return err
 			}
 			if err := tx.Table(m.table(roleRoleAction)).Create(row).Error; err != nil {
-				return fmt.Errorf("permissions: set actions: %w", err)
+				return fmt.Errorf("permissions: set actions: %w", classifyConflict(err))
 			}
 			out = append(out, ra)
 		}
@@ -142,4 +149,16 @@ func (m *manager) replaceActions(ctx context.Context, roleCode string, actions [
 		return nil, err
 	}
 	return out, nil
+}
+
+func distinct(actions []string) []string {
+	seen := make(map[string]bool, len(actions))
+	out := make([]string, 0, len(actions))
+	for _, a := range actions {
+		if !seen[a] {
+			seen[a] = true
+			out = append(out, a)
+		}
+	}
+	return out
 }

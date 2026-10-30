@@ -8,7 +8,7 @@ import (
 	"github.com/aosanya/mwanachama-backend-permissions/models"
 )
 
-func TestPM8_OpenBug_ListRolesHasNoDefaultCap(t *testing.T) {
+func TestPM8_ListRolesIsCappedByDefault(t *testing.T) {
 	mgr := newTestManager(t)
 	ctx := context.Background()
 
@@ -28,7 +28,7 @@ func TestPM8_OpenBug_ListRolesHasNoDefaultCap(t *testing.T) {
 	}
 }
 
-func TestPM8_OpenBug_ListGrantsHasNoDefaultCap(t *testing.T) {
+func TestPM8_ListGrantsIsCappedByDefault(t *testing.T) {
 	mgr := newTestManager(t)
 	ctx := context.Background()
 
@@ -53,7 +53,7 @@ func TestPM8_OpenBug_ListGrantsHasNoDefaultCap(t *testing.T) {
 	}
 }
 
-func TestPM16_OpenBug_ListActionsHasNoDefaultCap(t *testing.T) {
+func TestPM16_ListActionsIsCappedByDefault(t *testing.T) {
 	mgr := newTestManager(t)
 	ctx := context.Background()
 

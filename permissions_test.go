@@ -358,7 +358,7 @@ func TestActionsAnywhere_IsTheUnionAcrossEveryScope(t *testing.T) {
 	}
 }
 
-func TestPM7_OpenBug_NameFilterTreatsUnderscoreAndPercentAsWildcards(t *testing.T) {
+func TestPM7_NameFilterTakesUnderscoreAndPercentLiterally(t *testing.T) {
 	mgr := newTestManager(t)
 	ctx := context.Background()
 
