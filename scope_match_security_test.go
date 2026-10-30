@@ -73,7 +73,7 @@ func TestARetiredRolesCodeCannotBeRecreatedToReviveItsGrants(t *testing.T) {
 	if _, err := pm.UpdateRole(ctx, models.Role{Code: "editor", Name: "Renamed", Deleted: false}); err != nil {
 		t.Fatalf("UpdateRole on the retired role: %v", err)
 	}
-	if _, err := pm.AddAction(ctx, "editor", "example.thing.update"); err != nil && !errors.Is(err, permissions.ErrRoleNotFound) {
+	if _, err := pm.AddAction(ctx, "editor", "example.thing.update"); err != nil && !errors.Is(err, permissions.ErrRoleRetired) {
 		t.Fatalf("AddAction on the retired role: %v", err)
 	}
 

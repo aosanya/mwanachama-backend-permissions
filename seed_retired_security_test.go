@@ -16,14 +16,17 @@ func TestReseedingARetiredRoleDoesNotReinstateItsGrants(t *testing.T) {
 	ctx := context.Background()
 	pm := newTestManager(t)
 
-	if _, err := pm.Seed(ctx, "studio_operator", "Studio Operator", seedRetiredOperations); err != nil {
-		t.Fatalf("Seed: %v", err)
+	if _, err := pm.CreateRole(ctx, models.Role{Code: "studio_operator", Name: "Studio Operator"}); err != nil {
+		t.Fatalf("CreateRole: %v", err)
+	}
+	if _, err := pm.AddAction(ctx, "studio_operator", "example.thing.list"); err != nil {
+		t.Fatalf("AddAction: %v", err)
 	}
 	if _, err := pm.CreateGrant(ctx, models.Grant{Subject: "member-a", Scope: models.ScopeEverywhere, RoleCode: "studio_operator", GrantedBy: "admin"}); err != nil {
 		t.Fatalf("CreateGrant: %v", err)
 	}
 	if ok, err := pm.MayPerform(ctx, "member-a", "instance:one", "example.thing.list"); err != nil || !ok {
-		t.Fatalf("precondition: a seeded role's grant should permit its action, got %v, %v", ok, err)
+		t.Fatalf("precondition: a hand-made role's grant should permit its action, got %v, %v", ok, err)
 	}
 
 	if err := pm.DeleteRole(ctx, "studio_operator"); err != nil {
