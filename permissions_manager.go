@@ -17,7 +17,7 @@ type (
 	Grant       = models.Grant
 	RoleFilter  = models.RoleFilter
 	GrantFilter = models.GrantFilter
-	Power       = models.Power
+	Permission  = models.Permission
 )
 
 const ScopeEverywhere = models.ScopeEverywhere
@@ -40,11 +40,11 @@ type PermissionsManager interface {
 	WithdrawGrant(ctx context.Context, subject, scope, roleCode string) error
 	WithdrawGrantIn(ctx context.Context, subject, partition, scope, roleCode string) error
 
-	SetPowerDefinition(ctx context.Context, p models.Power) (models.Power, error)
-	OverridePower(ctx context.Context, p models.Power) (models.Power, error)
-	ClearPowerOverride(ctx context.Context, partition, power, roleKind string) error
-	ReadPower(ctx context.Context, partition, power, roleKind string) (models.Power, error)
-	ListPowers(ctx context.Context, partition string) ([]models.Power, error)
+	SetPermissionDefinition(ctx context.Context, p models.Permission) (models.Permission, error)
+	OverridePermission(ctx context.Context, p models.Permission) (models.Permission, error)
+	ClearPermissionOverride(ctx context.Context, partition, permission, roleKind string) error
+	ReadPermission(ctx context.Context, partition, permission, roleKind string) (models.Permission, error)
+	ListPermissions(ctx context.Context, partition string) ([]models.Permission, error)
 
 	Seed(ctx context.Context, roleCode, name string, operations ...[]byte) ([]models.RoleAction, error)
 
@@ -66,8 +66,8 @@ func NewPermissionsManager(db *gorm.DB, s *spec.Spec) (PermissionsManager, error
 		roleRoleAction: models.RoleAction{},
 		roleGrant:      models.Grant{},
 	}
-	if _, ok := s.ByRole(rolePower); ok {
-		carriers[rolePower] = models.Power{}
+	if _, ok := s.ByRole(rolePermission); ok {
+		carriers[rolePermission] = models.Permission{}
 	}
 	st, err := newStore(db, s, carriers)
 	if err != nil {
@@ -77,6 +77,9 @@ func NewPermissionsManager(db *gorm.DB, s *spec.Spec) (PermissionsManager, error
 }
 
 func Migrate(db *gorm.DB, s *spec.Spec) error {
+	if err := renamePowerToPermission(db, s); err != nil {
+		return err
+	}
 	if err := spec.Migrate(db, s); err != nil {
 		return err
 	}

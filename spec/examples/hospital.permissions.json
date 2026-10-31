@@ -22,10 +22,10 @@
       "description": "One practitioner credentialed for one privilege set on one ward."
     },
     {
-      "role": "power",
-      "name": "power",
-      "table": "powers",
-      "description": "Which kinds of post on a ward hold which named power, as published and as the ward overrode it."
+      "role": "permission",
+      "name": "permission",
+      "table": "permissions",
+      "description": "Which kinds of post on a ward hold which named permission, as published and as the ward overrode it."
     }
   ]
 }

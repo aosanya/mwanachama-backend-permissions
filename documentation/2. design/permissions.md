@@ -185,56 +185,65 @@ It does not decide who may grant. Granting is itself an action
 (`permissions.grant.create`), so the module gates itself, and what seeds the
 very first grant is a bootstrap problem for whoever mounts it.
 
-## Powers per role kind, in two layers (PM21)
+## Permissions per role kind, in two layers (PM21)
 
-A **power** is a code a host names, such as the ones agency's AG88 catalog
+A **permission** is a code a host names, such as the ones agency's AG88 catalog
 lists (`run_poll`, `post_notice`, `post_event`, `post_volunteer_call`); the
-actions a power allows are that catalog's to say. This module stores only
-whether a **role kind** holds a power in one **partition** (an agency), and
-which layer said so. It never learns the power's name or its actions.
+actions a permission allows are that catalog's to say. This module stores only
+whether a **role kind** holds a permission in one **partition** (an agency), and
+which layer said so. It never learns the permission's name or its actions.
 
-The `power` object is keyed by `(partition, power, role_kind, layer)`, and
+The `permission` object is keyed by `(partition, permission, role_kind, layer)`, and
 `layer` is `definition` or `override`:
 
-- `SetPowerDefinition` writes the published definition's tick. A publish
+- `SetPermissionDefinition` writes the published definition's tick. A publish
   rewrites it and never touches an override, and `set_by` is always empty.
-- `OverridePower` writes the owner's tick, with `set_by` required. It is the
+- `OverridePermission` writes the owner's tick, with `set_by` required. It is the
   caller's to fill from the session, never from a request body.
-- `ReadPower` answers the override when one exists, else the definition, and
+- `ReadPermission` answers the override when one exists, else the definition, and
   the answer carries `layer`, `set_by` and `set_at`, so a screen can say who
-  changed a power and when. Neither layer is `ErrPowerNotFound`.
-- `ClearPowerOverride` removes the override, and the definition answers again.
-- `ListPowers` answers every `(power, role_kind)` pair with a row in one
-  partition, ordered by power then role kind, each read exactly as
-  `ReadPower` would: the override when one exists, else the definition, with
+  changed a permission and when. Neither layer is `ErrPermissionNotFound`.
+- `ClearPermissionOverride` removes the override, and the definition answers again.
+- `ListPermissions` answers every `(permission, role_kind)` pair with a row in one
+  partition, ordered by permission then role kind, each read exactly as
+  `ReadPermission` would: the override when one exists, else the definition, with
   its `layer`, `set_by` and `set_at`. It is the studio's tick screen in one
   read. A pair with no row in either layer is not listed, and an empty
   partition answers an empty list.
 
+This object was called `power` until 2026-10-31. A deployment that stored it
+under the old names keeps its rows: `Migrate` renames the `powers` table to
+`permissions` and its `power` column to `permission` before anything else, and
+runs again without effect. The word is shared with the `permissions.*` action
+names on purpose, but the two are different things: an action is what an
+operation carries, and a permission here is a host's code that names a list of
+actions elsewhere, ticked per role kind. `TestMigrateCarriesAPowersTableAndItsPowerColumnOverToPermissions`
+pins the rename.
+
 `held` is a value per layer, not a deny rule: no grant subtracts from
 another, and an override replaces the definition's answer for exactly one
-key. The `power` role is optional in a domain spec; a spec that fills none
-gets `ErrPowersNotDeclared` from these methods, so an existing deployment's
+key. The `permission` role is optional in a domain spec; a spec that fills none
+gets `ErrPermissionsNotDeclared` from these methods, so an existing deployment's
 spec keeps loading unchanged.
 
 Four of the five have addresses: `GET`, `PUT` and `DELETE` on
-`/powers/{partition}/{power}/{role_kind}`, gated by `permissions.power.read`,
-`permissions.power.override` and `permissions.power.clear`, and `GET
-/powers/{partition}` for `ListPowers`, gated by its own
-`permissions.power.list`; the `PUT` binds `set_by` `from: caller`.
+`/permissions/{partition}/{permission}/{role_kind}`, gated by `permissions.permission.read`,
+`permissions.permission.override` and `permissions.permission.clear`, and `GET
+/permissions/{partition}` for `ListPermissions`, gated by its own
+`permissions.permission.list`; the `PUT` binds `set_by` `from: caller`.
 
-An override may untick a power the definition ticks: `held` is stored per
+An override may untick a permission the definition ticks: `held` is stored per
 layer and the override's value answers, true or false. Whether the owner may
 do that is an open question for the owner, not settled here; the code keeps
-that behaviour until it is answered. `SetPowerDefinition` has no address on purpose: a
+that behaviour until it is answered. `SetPermissionDefinition` has no address on purpose: a
 publish writes it in process.
 
-**A held power is not folded into the gate; that is the host's.** The
-actions a power allows are AG88's catalog to say, and this module never
+**A held permission is not folded into the gate; that is the host's.** The
+actions a permission allows are AG88's catalog to say, and this module never
 learns them, so `MayPerformIn`, `MayPerform`, `ActionsFor` and
-`ActionsAnywhere` read grants and role actions only. A power row grants no
-action, even when its role kind is a role the subject is granted; `TestAHeldPowerGrantsNoActionThroughTheGate`
-pins it. A host that gates a power's actions asks `ReadPower` for the
-caller's role kinds and maps the power to its actions itself. Who answers
-when no role kind holds a power (owners and agents, decision 342/348) is the
-host's rule over `ReadPower`, not stored here.
+`ActionsAnywhere` read grants and role actions only. A permission row grants no
+action, even when its role kind is a role the subject is granted; `TestAHeldPermissionGrantsNoActionThroughTheGate`
+pins it. A host that gates a permission's actions asks `ReadPermission` for the
+caller's role kinds and maps the permission to its actions itself. Who answers
+when no role kind holds a permission (owners and agents, decision 342/348) is the
+host's rule over `ReadPermission`, not stored here.

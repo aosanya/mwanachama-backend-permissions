@@ -50,18 +50,18 @@ func (*stubManager) ActionsAnywhere(context.Context, string) ([]string, error)  
 func (*stubManager) SeedActions(context.Context, string, []string) ([]models.RoleAction, error) {
 	panic("unused")
 }
-func (*stubManager) SetPowerDefinition(context.Context, models.Power) (models.Power, error) {
+func (*stubManager) SetPermissionDefinition(context.Context, models.Permission) (models.Permission, error) {
 	panic("unused")
 }
-func (*stubManager) OverridePower(context.Context, models.Power) (models.Power, error) {
+func (*stubManager) OverridePermission(context.Context, models.Permission) (models.Permission, error) {
 	panic("unused")
 }
-func (*stubManager) ClearPowerOverride(context.Context, string, string, string) error {
+func (*stubManager) ClearPermissionOverride(context.Context, string, string, string) error {
 	panic("unused")
 }
-func (*stubManager) ReadPower(context.Context, string, string, string) (models.Power, error) {
+func (*stubManager) ReadPermission(context.Context, string, string, string) (models.Permission, error) {
 	panic("unused")
 }
-func (*stubManager) ListPowers(context.Context, string) ([]models.Power, error) {
+func (*stubManager) ListPermissions(context.Context, string) ([]models.Permission, error) {
 	panic("unused")
 }

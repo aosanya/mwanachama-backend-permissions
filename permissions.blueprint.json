@@ -145,8 +145,8 @@
       ]
     },
     {
-      "role": "power",
-      "description": "Whether one role kind holds one power in one partition, as one layer set it. Two layers exist: the published definition's and the owner's override; an override row, when present, is the answer. A power is an opaque code naming a list of actions elsewhere; this module never learns what it allows.",
+      "role": "permission",
+      "description": "Whether one role kind holds one permission in one partition, as one layer set it. Two layers exist: the published definition's and the owner's override; an override row, when present, is the answer. A permission is an opaque code naming a list of actions elsewhere; this module never learns what it allows.",
       "fields": [
         {
           "name": "partition",
@@ -155,9 +155,9 @@
           "primary": true
         },
         {
-          "name": "power",
+          "name": "permission",
           "type": "string",
-          "description": "The power's code, compared exactly and never interpreted.",
+          "description": "The permission's code, compared exactly and never interpreted.",
           "primary": true,
           "matches": "code"
         },
@@ -181,7 +181,7 @@
         {
           "name": "held",
           "type": "bool",
-          "description": "Whether that layer ticks the power for that role kind."
+          "description": "Whether that layer ticks the permission for that role kind."
         },
         {
           "name": "set_by",
