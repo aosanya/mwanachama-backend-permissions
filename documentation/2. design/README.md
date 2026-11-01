@@ -15,7 +15,7 @@ the page that carries what would otherwise be comments in the source:
   grant; that bootstrap is the mount's.
 
 The cross-repo record it implements is
-[architecture-permissions.md](../../../mwanachama-developer/documentation/2.%20design/architecture-permissions.md).
+[architecture-permissions.md](../../../developer/documentation/2.%20design/architecture-permissions.md).
 The objects are declared in `permissions.blueprint.json` and the routes in
 `permissions.operations.json`, both at the repo root; the engine that reads
 them is `mwanachama-backend-shared`'s `spec` and `dispatch`, documented in
