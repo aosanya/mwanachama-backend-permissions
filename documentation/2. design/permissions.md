@@ -175,6 +175,48 @@ rule (an end subtracts nothing, the grant simply stops adding), and no
 notification — telling the outsider their access ended (decision 299) is the
 host's.
 
+## Reading one person's access in one partition (HS653)
+
+A page of what one person can do needs the role behind every action and only
+the agency being looked at. No earlier read gave that. `ActionsFor` and
+`ActionsAnywhere` return bare action strings with no role; `ActionsFor` sees
+only the unpartitioned grants; `ActionsAnywhere` takes no partition; and
+`ListGrants` and `ListActions` stop at 100 rows with no cursor.
+
+`AccessOf(subject, partition)` is the one read for it, declared as
+`subject_access` (`GET /subjects/{subject}/access?partition=`) and gated by its
+own action, `permissions.subject.access`. It runs the same join of grants,
+roles and role actions as `MayPerformIn`, so what it lists is what the gate
+would allow in that partition.
+
+**The partition is required.** A missing, empty or malformed one is
+`ErrInvalidPartition`, a 400 over HTTP. Asking in no partition would list only
+the unpartitioned grants and hide which agency the rest belong to.
+
+**Which grants count.** Those naming the asked partition and those naming none,
+which apply everywhere. A grant naming another partition is never read. A
+record-scoped grant is listed with its `record:` scope.
+
+**The line.** One line per grant and action, so an action given by two roles
+appears twice, once for each role, and a page can name the role that gives each
+one. A line carries `action`, `role_code`, `role_name`, `scope`, `partition`
+(empty for an unpartitioned grant), `granted_by`, `granted_at` and `ends_at`
+(empty when the grant never ends). Lines come ordered by action, then role,
+scope and partition. A subject holding nothing there gets `[]`, never `null`.
+
+**What is left out.** A retired role, a withdrawn grant and a grant past its
+`ends_at`, exactly as the gate leaves them out. Nothing is cut at a page size:
+the read returns every line.
+
+**Why `list_grants` with only a subject stays operator-only.** Its partition
+filter is an exact match, and when it is absent the read spans every
+partition, so a subject filter alone returns that person's grants in all of
+them. A manager of agency A who held `permissions.grant.list` would read
+agency B's grants too. The filter is left as it is, because an operator
+listing the whole store is what the read is for, so `permissions.grant.list`
+belongs to operators and is not to be given to an agency's manager. A per-agency page calls `subject_access` with its
+agency instead, which cannot cross a partition.
+
 ## What it does not do
 
 It gates **actions**, not rows. "May read entries, but only pending ones" is
