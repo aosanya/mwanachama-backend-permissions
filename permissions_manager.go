@@ -52,6 +52,7 @@ type PermissionsManager interface {
 	MayPerformIn(ctx context.Context, subject, partition, scope, action string) (bool, error)
 	ActionsFor(ctx context.Context, subject, scope string) ([]string, error)
 	ActionsAnywhere(ctx context.Context, subject string) ([]string, error)
+	AccessOf(ctx context.Context, subject, partition string) ([]AccessLine, error)
 }
 
 type manager struct {

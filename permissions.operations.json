@@ -28,6 +28,19 @@
       ],
       "returns": [{"body": true}]
     },
+    "subject_access": {
+      "method": "GET",
+      "path": "/subjects/{subject}/access",
+      "call": "AccessOf",
+      "action": "permissions.subject.access",
+      "title": "Read what a subject can do in one partition",
+      "description": "Every action one subject may perform in one partition, one line per action and grant, each naming the role that gives it, where it applies, who granted it and when, and when it ends. Grants naming no partition apply in every partition and are listed too; a retired role and an ended grant are not. Nothing is cut off at a page size.",
+      "args": [
+        {"from": "path", "as": "subject", "description": "The subject to ask about."},
+        {"from": "query", "as": "partition", "required": true, "description": "The partition to read in. Grants naming another partition are not listed."}
+      ],
+      "returns": [{"body": true}]
+    },
 
     "create_role": {
       "method": "POST",
