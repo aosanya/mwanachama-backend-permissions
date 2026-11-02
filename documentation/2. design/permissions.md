@@ -238,6 +238,55 @@ included: `list_permissions`, `read_permission`, `override_permission`,
 `clear_permission_override`, `create_grant` and `withdraw_grant`. The probe
 covered only the three reads.
 
+### Open design point: pinning the partition to the mount (HS696)
+
+Not built, because it needs a change in `mwanachama-backend-shared/dispatch`
+that has not been made. What the engine has today: an argument comes from the
+`path`, the `query`, the `body`, the `caller` or the `device`, and the last two
+are host-supplied `func(ctx) string` values on `Mount`. None of them is the
+partition.
+
+- `caller` is the subject. The same mount already uses it for `granted_by` and
+  `set_by`, so it cannot also carry the partition.
+- `device` is a device id; comm declares `device_id` from it. Reusing it would
+  collide with any module that already does.
+- wakala-api keeps the partition under its own context key
+  (`partitionKey` in `internal/api/http/authorize.go`), which the engine cannot
+  read.
+
+The proposal, for the owner to approve before anything changes in shared:
+
+1. A sixth argument source, `partition` (`dispatch.FromPartition`), listed in
+   `sources` in `dispatch/spec.go`, with `Partition Caller` on `dispatch.Mount`
+   and `dispatch.Deps`, resolved wherever `caller` and `device` are: `bindOne`
+   and `overwrite` in `bind.go`, `bindTool` and `overwriteFromArgs` in
+   `tools_bind.go`. `validate.go` and `refers.go` treat it as a session source:
+   never whole, repeated, ignored or required, and it names its argument.
+2. It pins instead of replacing. A mount built with a `Partition` resolver
+   always hands the manager the resolver's value, and the request's own
+   `partition` is not read and not published in the tool schema. A resolver that
+   answers empty refuses the call, so a tenant mount that loses its partition
+   never turns into an operator mount. A mount built with no resolver reads the
+   request's `partition` as today, which is the operator mount.
+3. Here, `routes.Mount` gains `Partition dispatch.Caller` and passes it on, and
+   the operations file declares `{"from": "partition", "as": "partition"}` in
+   place of the query argument on `subject_access` and `may_perform`, and
+   `{"from": "partition", "as": "partition", "into": "Partition"}` beside the
+   whole query on `list_grants`. The same one line would pin `list_permissions`,
+   `read_permission`, `override_permission` and `clear_permission_override`
+   (path) and `create_grant` (body), `withdraw_grant` (query).
+
+What proves it, once built: on a tenant mount, a holder in `agency-a` asking for
+`agency-b` through `subject_access`, `list_grants` (with a partition, with an
+empty one and with none) and `check` is answered with `agency-a`'s data; a
+resolver answering empty is refused; and on an operator mount the three probes
+in `routes/cross_partition_read_test.go` stay green as they are today, while
+the tenant-mount tests replace the claim above that the reads cross.
+
+Not taken: a module-owned `WithPartition(ctx, partition)` that the manager reads
+from the context. It works without touching shared, but it hides the binding in
+the context and every other module would grow its own.
+
 ## What it does not do
 
 It gates **actions**, not rows. "May read entries, but only pending ones" is
