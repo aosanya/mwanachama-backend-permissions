@@ -208,14 +208,35 @@ scope and partition. A subject holding nothing there gets `[]`, never `null`.
 `ends_at`, exactly as the gate leaves them out. Nothing is cut at a page size:
 the read returns every line.
 
-**Why `list_grants` with only a subject stays operator-only.** Its partition
-filter is an exact match, and when it is absent the read spans every
-partition, so a subject filter alone returns that person's grants in all of
-them. A manager of agency A who held `permissions.grant.list` would read
-agency B's grants too. The filter is left as it is, because an operator
-listing the whole store is what the read is for, so `permissions.grant.list`
-belongs to operators and is not to be given to an agency's manager. A per-agency page calls `subject_access` with its
-agency instead, which cannot cross a partition.
+**Who may ask is not bound to the partition (HS696).** `subject_access` lists
+only the partition it is asked in, and that is all "cannot cross a partition"
+ever meant: it describes one call's output, not who may make the call. The gate
+in front of the routes hands the authorizer `(ctx, action)`, so the partition a
+caller names in `?partition=` never reaches it. A probe through a gate shaped
+like wakala-api's, `MayPerformIn(caller, X-Instance, "module:permissions",
+action)`, with a caller who holds the three actions below in `agency-a` only,
+read this (pinned by `routes/cross_partition_read_test.go`):
+
+| Read | Asked with | What the `agency-a` holder gets |
+|---|---|---|
+| `subject_access` | `?partition=agency-b` | every action of any subject in `agency-b`, each with its role, who granted it and when |
+| `list_grants` | `?partition=agency-b` | `agency-b`'s live grants, subject by subject |
+| `list_grants` | `?partition=` empty, or no filter | every partition's live grants, subject by subject, up to the 100-row cap: the partition filter is skipped when the field is empty |
+| `check` | `partition=agency-b` | whether any subject may perform any action in `agency-b` |
+
+Presenting `agency-b` as the instance is still refused, because there the
+holder holds nothing. The gate binds the caller to the partition it presents
+and nothing binds the query to it.
+
+So `permissions.subject.access`, `permissions.grant.list` and
+`permissions.check.read` are **operator-only until the host binds the
+partition to the caller's own agency**: held by a subject whose grant names no
+partition, never by an agency's manager. A per-agency page does not become safe
+by calling `subject_access` with its agency. The same follows from how the other
+operations are declared (a partition in the path, query or body), writes
+included: `list_permissions`, `read_permission`, `override_permission`,
+`clear_permission_override`, `create_grant` and `withdraw_grant`. The probe
+covered only the three reads.
 
 ## What it does not do
 
