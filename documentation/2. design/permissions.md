@@ -233,9 +233,11 @@ Four of the five have addresses: `GET`, `PUT` and `DELETE` on
 `permissions.permission.list`; the `PUT` binds `set_by` `from: caller`.
 
 An override may untick a permission the definition ticks: `held` is stored per
-layer and the override's value answers, true or false. Whether the owner may
-do that is an open question for the owner, not settled here; the code keeps
-that behaviour until it is answered. `SetPermissionDefinition` has no address on purpose: a
+layer and the override's value answers, true or false. The owner settled it
+(member app decision 268, 2026-10-22: owners may override any unlocked tick),
+and `TestAnOverrideWinsOverTheDefinitionAndSaysWhoSetIt` pins it. Which ticks
+are locked is the host's to say and to enforce (wakala-api WK179); this module
+stores no lock. `SetPermissionDefinition` has no address on purpose: a
 publish writes it in process.
 
 **A held permission is not folded into the gate; that is the host's.** The
