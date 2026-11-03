@@ -11,7 +11,7 @@ import (
 	permissions "github.com/aosanya/mwanachama-backend-permissions"
 )
 
-func TestPM12_OpenBug_ConcurrentCreateRoleOnANewCodeFailsInstead(t *testing.T) {
+func TestPM12_ConcurrentCreateRoleOnANewCodeDoesNotLeakARawConstraintError(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open("file:pm12?mode=memory&cache=shared"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})

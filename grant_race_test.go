@@ -11,7 +11,7 @@ import (
 	permissions "github.com/aosanya/mwanachama-backend-permissions"
 )
 
-func TestPM11_OpenBug_ConcurrentCreateGrantOnANewKeyFailsInstead(t *testing.T) {
+func TestPM11_ConcurrentCreateGrantOnANewKeyDoesNotLeakARawConstraintError(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open("file:pm11?mode=memory&cache=shared"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})

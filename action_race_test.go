@@ -11,7 +11,7 @@ import (
 	permissions "github.com/aosanya/mwanachama-backend-permissions"
 )
 
-func TestPM13_OpenBug_ConcurrentAddActionOnTheSamePairFailsInstead(t *testing.T) {
+func TestPM13_ConcurrentAddActionOnTheSamePairDoesNotLeakARawConstraintError(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open("file:pm13?mode=memory&cache=shared"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
