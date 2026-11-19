@@ -8,6 +8,8 @@ Where work on `mwanachama-backend-permissions` is tracked. Two files carry the b
   used to sit above the open list. A finished id is never reused: scan this
   file before minting the next one.
 
+- [hub-import-drift.md](hub-import-drift.md) — what differs between this module and the hub's in-tree copy, and what was done with each difference.
+
 ## Rows that arrive with a failing test
 
 Two scheduled routines file rows here, and each files a **deliberately red**
